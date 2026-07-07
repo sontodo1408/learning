@@ -1,0 +1,10 @@
+@import "tailwindcss" prefix(tw);
+
+@theme {
+  --color-lime-1: #ff7630;
+  --color-lime-2: #ff9966; /* shadow strong */
+  --color-lime-3: #ffbb99; /* shadow bland */
+  --color-lime-4: #ffddcc; /* hover color */
+  --color-lime-5: #ffeee6;
+  --color-lime-6: #fff7f3;
+}
