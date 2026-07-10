@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { ROUTER_NAME } from "@/helpers/const";
+import { ROLE, ROUTER_NAME } from "@/helpers/const";
+import { useAuthStore } from "@/stores/auth-store";
+import authService from "@/services/auth-service";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,6 +9,8 @@ const router = createRouter({
     {
       path: "/admin",
       component: () => import("@/layouts/AdminLayout.vue"),
+      // Only ROLE_ADMIN users may enter any /admin screen; enforced in the beforeEach guard below
+      meta: { requiresAdmin: true },
       children: [
         {
           path: "",
@@ -46,6 +50,11 @@ const router = createRouter({
       component: () => import("@/layouts/BlankLayout.vue"),
       children: [
         {
+          path: "",
+          name: ROUTER_NAME.USER_HOME,
+          component: () => import("@/views/S0007_UserHome.vue"),
+        },
+        {
           path: "login",
           name: ROUTER_NAME.LOGIN,
           component: () => import("@/views/S0003_Login.vue"),
@@ -53,6 +62,31 @@ const router = createRouter({
       ],
     },
   ],
+});
+
+// After a page refresh, the JWT survives (localStorage) but the Pinia user profile does
+// not: re-fetch the profile once before the first route renders so the user stays signed in.
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore();
+
+  if (authStore.token && !authStore.user) {
+    try {
+      await authService.checkLogin();
+    } catch {
+      // rest-client already signs the user out on a 401; nothing else to do here
+    }
+  }
+
+  // /admin screens require a signed-in ROLE_ADMIN user; every other screen stays public
+  if (to.matched.some((record) => record.meta.requiresAdmin)) {
+    if (!authStore.isLoggedIn) {
+      // Carry the originally requested URL along so the login screen can return here afterwards
+      return { name: ROUTER_NAME.LOGIN, query: { redirect: to.fullPath } };
+    }
+    if (authStore.user?.role !== ROLE.ADMIN) {
+      return { name: ROUTER_NAME.USER_HOME };
+    }
+  }
 });
 
 export default router;

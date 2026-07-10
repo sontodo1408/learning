@@ -19,4 +19,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return the matching user, or empty if none exists
      */
     Optional<UserEntity> findByUsername(String username);
+
+    /**
+     * Looks up a user by their email address (used to match/link a Google account
+     * to an existing user, since Google doesn't share the app's username).
+     *
+     * @param email the email to search for
+     * @return the matching user, or empty if none exists
+     */
+    Optional<UserEntity> findByEmail(String email);
 }

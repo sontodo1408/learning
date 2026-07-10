@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import vn.io.sontd.learning.server.request.auth.GoogleLoginRequest;
 import vn.io.sontd.learning.server.request.auth.LoginRequest;
 import vn.io.sontd.learning.server.response.ResponseRoot;
 import vn.io.sontd.learning.server.service.AuthService;
@@ -28,6 +29,18 @@ public class AuthController extends BaseController {
     @PostMapping("/login")
     public ResponseRoot login(@RequestBody LoginRequest request) {
         return success(authService.login(request));
+    }
+
+    /**
+     * Authenticates a user via a Google ID token and issues a JWT, registering
+     * a new account on the fly if this is the user's first Google sign-in.
+     *
+     * @param request carries the Google ID token obtained by the client after Google Sign-In
+     * @return the user's profile (minus password) plus the JWT token
+     */
+    @PostMapping("/google-login")
+    public ResponseRoot googleLogin(@RequestBody GoogleLoginRequest request) {
+        return success(authService.googleLogin(request));
     }
 
     /**

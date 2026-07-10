@@ -14,6 +14,13 @@ class AuthService extends BaseService {
     return result.payload;
   }
 
+  /** Log in with a Google ID token (obtained client-side via Google Sign-In), persist the token + profile in authStore, and return the profile */
+  async googleLogin(idToken) {
+    const result = await this.post('/google-login', { idToken });
+    useAuthStore().signIn(result.payload.token, result.payload);
+    return result.payload;
+  }
+
   /** Re-fetch the current user's profile; also validates the stored JWT is still accepted */
   async checkLogin() {
     const result = await this.get('/check-login');

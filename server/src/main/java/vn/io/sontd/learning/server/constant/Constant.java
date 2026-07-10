@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class Constant {
     // SECURITY
     /** URL patterns that bypass JWT authentication entirely (see JwtAuthenticationFilter). */
-    public static final String[] INTERNAL_PERMIT_ALL = {"/api/v1/auth/login", "/test/**"};
+    public static final String[] INTERNAL_PERMIT_ALL = {"/api/v1/auth/login", "/api/v1/auth/google-login", "/test/**"};
     /** JWT claim name used to carry the user's DB-encoded password. */
     public static final String PASSWORD_CLAIM = "password_claim";
 

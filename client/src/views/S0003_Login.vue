@@ -1,13 +1,16 @@
 <script setup>
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { ROUTER_NAME } from '@/helpers/const';
+import { useRoute, useRouter } from 'vue-router';
+import { ROLE, ROUTER_NAME } from '@/helpers/const';
 import authService from '@/services/auth-service';
+import { promptGoogleSignIn } from '@/utilities/google-identity';
 import logoO from '@/assets/imgs/logo_o.png';
+import googleIcon from '@/assets/imgs/google.svg';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
+const route = useRoute();
 const router = useRouter();
 
 // 2) =============== VARIABLE REF     ===============
@@ -21,14 +24,41 @@ const showPassword = ref(false);
 const isLoading = ref(false);
 
 // 3) =============== METHOD/FUNCTION  ===============
+/**
+ * Return to the URL the user was originally headed to before being redirected here
+ * (see the router guard's `redirect` query param); otherwise send an admin to the
+ * admin dashboard and everyone else to the regular user home.
+ */
+const redirectAfterLogin = (user) => {
+  if (typeof route.query.redirect === 'string') {
+    router.push(route.query.redirect);
+    return;
+  }
+  router.push({ name: user.role === ROLE.ADMIN ? ROUTER_NAME.HOME : ROUTER_NAME.USER_HOME });
+};
+
 /** Log in via AuthService, then enter the app; a rejected login is already surfaced by RestClient's notice dialog */
 const submit = async () => {
   isLoading.value = true;
   try {
-    await authService.login(username.value, password.value);
-    router.push({ name: ROUTER_NAME.HOME });
+    const user = await authService.login(username.value, password.value);
+    redirectAfterLogin(user);
   } catch {
     // Nothing else to do: the server's error message was already shown by RestClient
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+/** Let the user pick a Google account, then log in via the resulting ID token */
+const loginWithGoogle = async () => {
+  isLoading.value = true;
+  try {
+    const idToken = await promptGoogleSignIn(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+    const user = await authService.googleLogin(idToken);
+    redirectAfterLogin(user);
+  } catch {
+    // Cancelled chooser or a rejected login already surfaced by RestClient's notice dialog
   } finally {
     isLoading.value = false;
   }
@@ -48,14 +78,14 @@ const submit = async () => {
       <p class="login-card__title">{{ t('S0003.label.title') }}</p>
 
       <form class="login-card__form" @submit.prevent="submit">
-        <q-input v-model="username" type="text" outlined dense bg-color="white" :disable="isLoading"
+        <q-input v-model="username" type="text" outlined bg-color="white" :disable="isLoading"
           :label="t('S0003.label.usernamePlaceholder')" class="login-card__field">
           <template v-slot:prepend>
             <q-icon name="person_outline" />
           </template>
         </q-input>
 
-        <q-input v-model="password" :type="showPassword ? 'text' : 'password'" outlined dense bg-color="white"
+        <q-input v-model="password" :type="showPassword ? 'text' : 'password'" outlined bg-color="white"
           :disable="isLoading" :label="t('S0003.label.passwordPlaceholder')" class="login-card__field">
           <template v-slot:prepend>
             <q-icon name="lock_outline" />
@@ -70,6 +100,13 @@ const submit = async () => {
 
         <CBtn type="submit" no-caps class="login-card__submit" :label="t('S0003.btn.submit')" :loading="isLoading"
           :disable="isLoading" />
+
+        <div class="login-card__divider">
+          <span>{{ t('S0003.label.orDivider') }}</span>
+        </div>
+
+        <CBtn no-caps outline class="login-card__google" :icon="`img:${googleIcon}`"
+          :label="t('S0003.btn.loginWithGoogle')" :disable="isLoading" @click="loginWithGoogle" />
       </form>
     </div>
   </q-page>
@@ -165,6 +202,41 @@ const submit = async () => {
     height: 44px;
     border-radius: 999px;
     font-weight: 700;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(#3a2a22, 0.5);
+
+    &::before,
+    &::after {
+      flex: 1;
+      height: 1px;
+      content: '';
+      background-color: rgba(#3a2a22, 0.15);
+    }
+
+    span {
+      padding: 0 12px;
+    }
+  }
+
+  &__google {
+    height: 44px;
+    border-radius: 999px;
+    font-weight: 700;
+    color: #3a2a22;
+    background-color: white;
+
+    :deep(.q-btn__content) {
+      gap: 10px;
+    }
   }
 }
 

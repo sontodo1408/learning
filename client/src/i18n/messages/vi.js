@@ -40,6 +40,7 @@ export default {
   S0003: {
     btn: {
       submit: 'Đăng nhập',
+      loginWithGoogle: 'Đăng nhập với Google',
     },
     label: {
       title: 'Đăng nhập',
@@ -47,6 +48,7 @@ export default {
       usernamePlaceholder: 'Tên đăng nhập',
       passwordPlaceholder: 'Mật khẩu',
       forgotPassword: 'Quên mật khẩu?',
+      orDivider: 'Hoặc',
     },
   },
   // Shared chrome for StudyLayout (Flashcard/Learn/Test mode sidebar + tab bar)
@@ -98,6 +100,11 @@ export default {
       completed: '{percent}% hoàn thành',
       points: '{points} điểm',
       submitted: 'Bạn đã nộp bài thành công!',
+    },
+  },
+  S0007: {
+    label: {
+      title: 'Trang chủ',
     },
   },
 };

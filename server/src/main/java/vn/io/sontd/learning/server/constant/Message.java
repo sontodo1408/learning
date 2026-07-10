@@ -17,4 +17,6 @@ public class Message {
     public static final String SYS_ERROR = "Lỗi hệ thống. Vui lòng thử lại sau!";
     /** Message returned when login credentials are invalid. */
     public static final String LOGIN_FAIL = "Login thất bại. Hãy kiểm tra lại username và password!";
+    /** Message returned when a Google ID token fails verification (invalid, expired, or wrong audience). */
+    public static final String GOOGLE_LOGIN_FAIL = "Đăng nhập Google thất bại. Token không hợp lệ hoặc đã hết hạn!";
 }

@@ -40,6 +40,7 @@ export default {
   S0003: {
     btn: {
       submit: 'Log in',
+      loginWithGoogle: 'Log in with Google',
     },
     label: {
       title: 'Login',
@@ -47,6 +48,7 @@ export default {
       usernamePlaceholder: 'Username',
       passwordPlaceholder: 'Password',
       forgotPassword: 'Forgot password?',
+      orDivider: 'Or',
     },
   },
   // Shared chrome for StudyLayout (Flashcard/Learn/Test mode sidebar + tab bar)
@@ -98,6 +100,11 @@ export default {
       completed: '{percent}% Completed',
       points: '{points} pt',
       submitted: 'Your test has been submitted!',
+    },
+  },
+  S0007: {
+    label: {
+      title: 'Home',
     },
   },
 };

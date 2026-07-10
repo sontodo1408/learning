@@ -6,11 +6,18 @@ export const DIALOG_BTN = {
 
 export const ROUTER_NAME = {
   LOGIN: "login",
+  USER_HOME: "user-home",
   HOME: "home",
   VIDEO_VOCAB: "video-vocab",
   FLASHCARD: "flashcard",
   LEARN: "learn",
   TEST: "test",
+};
+
+// Spring Security authority strings (must match the server's ERole enum)
+export const ROLE = {
+  ADMIN: "ROLE_ADMIN",
+  USER: "ROLE_USER",
 };
 
 // Provide/inject key for the study header (title/tags/progress) rendered by
