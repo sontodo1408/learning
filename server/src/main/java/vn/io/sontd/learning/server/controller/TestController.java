@@ -4,19 +4,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import vn.io.sontd.learning.server.entity.UserEntity;
 import vn.io.sontd.learning.server.repository.UserRepository;
+import vn.io.sontd.learning.server.response.ResponseData;
+import vn.io.sontd.learning.server.response.ResponseRoot;
 
-import java.util.List;
-
+/**
+ * Scratch endpoint used to sanity-check the database connection and repository layer.
+ */
 @RestController
 @RequestMapping("/test")
 @RequiredArgsConstructor
-public class TestController {
+public class TestController extends BaseController {
     private final UserRepository userRepository;
 
+    /**
+     * Returns every row in the {@code users} table.
+     */
     @GetMapping
-    public List<UserEntity> test() {
-        return userRepository.findAll();
+    public ResponseRoot test() {
+        return success(new ResponseData<>(userRepository.findAll()));
     }
 }

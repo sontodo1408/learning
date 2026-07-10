@@ -28,6 +28,11 @@ import vn.io.sontd.learning.server.service.JwtService;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Central Spring Security configuration: stateless JWT-based authentication,
+ * CORS, password encoding, and the JSON error handlers used instead of the
+ * framework's default HTML error pages.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
@@ -36,11 +41,23 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
 
+    /**
+     * Builds the custom JWT authentication filter used before
+     * {@link UsernamePasswordAuthenticationFilter} in the chain.
+     */
     @Bean
     JwtAuthenticationFilter jwtAuthFilter() {
         return new JwtAuthenticationFilter(jwtService, userDetailsService);
     }
 
+    /**
+     * Configures the main HTTP security filter chain: CORS, disabled CSRF
+     * (not needed for a stateless token-based API), public/authenticated URL
+     * rules, stateless sessions, and the custom JWT filter/error handlers.
+     *
+     * @param http the security configuration builder
+     * @return the built filter chain
+     */
     @Bean
     SecurityFilterChain internalSecurityFilterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource())) //
@@ -48,7 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests.requestMatchers(Constant.INTERNAL_PERMIT_ALL).permitAll().anyRequest().authenticated()) //
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authenticationProvider(authenticationProvider());
 
-        // 構成での例外処理
+        // Custom JSON error handling for authentication/authorization failures
         http.exceptionHandling(configure -> {
             configure.authenticationEntryPoint(authenticationEntryPoint());
             configure.accessDeniedHandler(accessDeniedHandler());
@@ -59,31 +76,59 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Handles requests that fail authentication (missing/invalid token).
+     */
     @Bean
     AuthenticationEntryPoint authenticationEntryPoint() {
         return new FailAuthenticationEntryPoint();
     }
 
+    /**
+     * Handles requests that are authenticated but not authorized.
+     */
     @Bean
     AccessDeniedHandler accessDeniedHandler() {
         return new FailAccessDeniedHandler();
     }
 
+    /**
+     * Looks up users and verifies credentials via {@link #userDetailsService}
+     * and {@link #passwordEncoder()}.
+     * <p>
+     * The encoder must be set explicitly — otherwise {@link DaoAuthenticationProvider}
+     * falls back to Spring Security's default {@code DelegatingPasswordEncoder}, which
+     * requires an {@code {id}} prefix on stored passwords and rejects raw BCrypt hashes.
+     */
     @Bean
     AuthenticationProvider authenticationProvider() {
-        return new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
 
+    /**
+     * Exposes Spring Security's {@link AuthenticationManager} as a bean so it
+     * can be injected into services (e.g. for login).
+     */
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Password hashing/verification strategy used for stored user passwords.
+     */
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * CORS policy for the API: only the known frontend origins are allowed,
+     * credentials (cookies/auth headers) are permitted, and standard REST
+     * verbs are enabled.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

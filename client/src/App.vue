@@ -1,6 +1,6 @@
 <script setup>
 import DialogFrame from '@/components/DialogFrame.vue';
-import LoginPage from '@/Views/LoginPage.vue';
+import LoginPage from '@/views/S0003_Login.vue';
 
 // 1) =============== INITIALIZATION   ===============
 const isAuthProcess = false;

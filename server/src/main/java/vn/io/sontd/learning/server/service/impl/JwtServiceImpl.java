@@ -17,6 +17,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link JwtService} implementation using the JJWT library with HMAC signing.
+ * Signing key and token lifetime come from {@code thesis.app.jwt-secret} and
+ * {@code thesis.app.jwt-expiration-ms} in {@code application.properties}.
+ */
 @Component
 @Slf4j
 public class JwtServiceImpl implements JwtService {
@@ -26,6 +31,11 @@ public class JwtServiceImpl implements JwtService {
     @Value("${thesis.app.jwt-expiration-ms}")
     private int jwtExpirationMs;
 
+    /**
+     * {@inheritDoc}
+     * The subject is the username; the password claim carries the DB-encoded
+     * password so {@code JwtAuthenticationFilter} can detect password changes.
+     */
     @Override
     public String generateJwtToken(TokenInfoDTO tokenInfo) {
         Map<String, Object> claims = new HashMap<>();
@@ -39,6 +49,11 @@ public class JwtServiceImpl implements JwtService {
                 .compact();
     }
 
+    /**
+     * {@inheritDoc}
+     * Any parsing failure (invalid signature, malformed token, etc.) is
+     * logged and treated as "no username" rather than propagated.
+     */
     @Override
     public String getUsername(String token) {
         try {
@@ -54,6 +69,10 @@ public class JwtServiceImpl implements JwtService {
         return StringUtils.EMPTY;
     }
 
+    /**
+     * {@inheritDoc}
+     * Any parsing failure is logged and treated as "no password" rather than propagated.
+     */
     @Override
     public String getPassword(String token) {
         try {
@@ -69,9 +88,13 @@ public class JwtServiceImpl implements JwtService {
         return StringUtils.EMPTY;
     }
 
+    /**
+     * {@inheritDoc}
+     * Expects the header value to be {@code "Bearer <token>"}.
+     */
     @Override
     public String getAuthToken(HttpServletRequest httpReq) {
-        // HEADERからトークンを取得します。
+        // Read the raw Authorization header from the request
         final String authHeader = httpReq.getHeader(Constant.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith(Constant.BEARER)
                 && authHeader.length() > 7) {
@@ -80,12 +103,16 @@ public class JwtServiceImpl implements JwtService {
         return StringUtils.EMPTY;
     }
 
+    /**
+     * {@inheritDoc}
+     * Logs the specific validation failure reason (malformed, expired, unsupported, or empty claims).
+     */
     @Override
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser() // thay parserBuilder()
-                    .verifyWith(key()) // thay setSigningKey()
-                    .build().parse(authToken); // thay parseClaimsJws(token)
+            Jwts.parser() // JJWT 0.13 API: parser() replaces the old parserBuilder()
+                    .verifyWith(key()) // replaces the old setSigningKey()
+                    .build().parse(authToken); // replaces the old parseClaimsJws(token)
             return true;
         } catch (io.jsonwebtoken.MalformedJwtException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
@@ -100,6 +127,9 @@ public class JwtServiceImpl implements JwtService {
         return false;
     }
 
+    /**
+     * Builds the HMAC signing key from the configured secret.
+     */
     private SecretKey key() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }

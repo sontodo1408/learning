@@ -1,0 +1,77 @@
+---
+description: Backend feature flow from Prisma to API; follow when adding or changing backend modules
+alwaysApply: false
+---
+# Backend Development Steps
+
+When adding or changing backend features, follow this order. Use existing modules (`adn`, `customs-class`, `asn`, `auth`) as reference.
+
+## 1. Prisma schema (`backend/prisma/schema.prisma`)
+
+- Add/edit `model` blocks: `@id`, `@default()`, `@map()` for DB columns, `@db.VarChar(n)`.
+- Use `@relation()` for FKs and the reverse relation on the other model.
+- Use `@@map("table_name")` for snake_case tables and `@@index([...])` for indexes.
+- Generator output: `../src/shared/database/prisma`; datasource: PostgreSQL.
+- After changes: `npm run prisma:generate` then `npm run prisma:migrate` (or `prisma migrate dev --name descriptive_name`).
+
+## 2. Module types (`src/modules/<module>/<module>.types.ts`)
+
+- Use **Zod** for all request/response shapes.
+- DTOs: `z.object({ ... })` with `z.coerce.number()`, `z.string().max(n)`, `.optional()`, `.default()`. Use `VALIDATION_MSG` from `../../shared/schemas` for error messages. Export schema and `z.infer<typeof schema>`.
+- List query: use `withPaginationQuery(filterSchema)` from shared schemas when the list is paginated; result shape includes `pagination: { page, limit }` and filter fields.
+- Response schemas: define payloads (e.g. `data`, `total`, `page`, `limit`); use `paginationResponseSchema` for list responses. Export types via `z.infer`.
+- Reuse small schemas (e.g. item DTO) in create/update and list/detail responses.
+
+## 3. Projector (`src/modules/<module>/<module>.projector.ts`) — optional
+
+- Pure mapping functions from Prisma/DB row shapes to **response types** from `module.types.ts` (e.g. `mapToDetailResponse`, `mapToListItemResponse`).
+- Handle Decimal→number and null; do not expose raw Prisma types.
+- Repo imports and uses these; no business logic here.
+
+## 4. Repository (`src/modules/<module>/<module>.repo.ts`)
+
+- Constructor: `PrismaClient` (from `../../shared/database/prisma/client`) and `Logger`.
+- All DB access via `this.prisma.<model>.<findMany|findFirst|create|update|...>`; use `include`/`select` for relations.
+- Map results via **projector** functions or inline to response types from `module.types.ts`. Do not expose raw Prisma types.
+- Do not wrap DB calls in try-catch for logging. For business rule violations (e.g. not found, duplicate key), throw **AppError** with `origin: 'repository'`, appropriate `statusCode` (404, 409, 400), and optional `errorCode`. Let other errors (e.g. Prisma) bubble to the global error handler.
+
+## 5. Service (`src/modules/<module>/<module>.service.ts`)
+
+- Constructor: module **Repository**, **Logger**, and optional shared services (e.g. CryptoService).
+- Methods receive **validated DTOs** and optional `AuthenticatedRequest`; orchestrate repo calls and business rules.
+- Success path: return **HandlerResponse.success(data, statusCode)**. Do not catch errors for logging or to return HandlerResponse.error.
+- Business errors (not found, conflict, validation): **throw AppError** with `origin: 'service'`, appropriate `statusCode` (404, 409, 401, etc.), and optional `errorCode`. The global error handler will log once and send the response.
+
+## 6. Controller (`src/modules/<module>/<module>.controller.ts`)
+
+- Constructor: `FastifyInstance`, route **prefix** (e.g. `/api/v1/<module>`), **Service**, **Logger`. Some modules use an internal `PREFIX` constant instead of a prefix argument.
+- In constructor: register routes with `this.server.get/post/put/delete(this.prefix | path, options?, handler)`.
+- Protected routes: `preHandler: [this.server.authenticate, ...]`. Validation: use **createValidateRequest(schema, 'query'|'body'|'params', { logger, context })** from `../../shared/middleware/validate-request` in preHandler. Validated data is attached to the request as `request.validatedQuery`, `request.validatedBody`, or `request.validatedParams` (see `src/types/fastify.d.ts`).
+- For path params use shared schemas when applicable: `idParamSchema`, `requestIdParamSchema`, `idHoldIdParamSchema` from `../../shared/schemas`; validate in preHandler so handlers receive typed params.
+- In handlers: read validated data from the request, call the service method, then `return response.constructFastifyReply(reply)`.
+- Do not parse body/query/params in the handler when using createValidateRequest; validation runs in preHandler and throws ReplySentError on failure.
+
+## 7. Wire in server (`src/server.ts`)
+
+- Import module **Controller**, **Repository**, **Service**.
+- Instantiate **Repository**(prisma, logger) → **Service**(repository, logger [, shared services]) → **Controller**(server, prefix, service, logger). Controller constructor registers routes. Some modules omit prefix and use a constant inside the controller.
+- Services that need multiple repos: pass them in the constructor (e.g. ShipmentNoticeService(asnRepository, adnRepository, logger)).
+- Auth: create shared services (JWT, Crypto), UserRepository, AuthService, then `createAuthMiddleware(...)`; `server.decorate('authenticate', authMiddleware)` once. Controllers use `this.server.authenticate` in `preHandler`.
+
+## 8. Backend–frontend readiness (`mockups_v3/`)
+
+- After wiring the backend, check **mockups_v3/** for the screens that use this feature (e.g. `inbound/`, `outbound/`, `inventory/`, `shipment-notice/`, `vanning/`, `adn/`, `asn/`, `system/`, etc.).
+- For each related screen (list, detail, create/edit, request, work, allocation, etc.), confirm:
+  - **List screens**: API returns all fields shown in tables (columns, filters, sort). Pagination and filter query params match UI needs.
+  - **Detail screens**: GET-by-id (or equivalent) returns every field displayed on the detail page, including nested data (e.g. lines, locations).
+  - **Create/Edit forms**: Request body schema includes every input the mockup shows; response or follow-up GET returns enough to show success state or redirect to detail.
+  - **Actions** (e.g. request, work, allocation, inspection, picking): Endpoints accept and return the data required by the screen (status, quantities, selections, next steps).
+- If the mockup shows data or actions the API does not yet support, add or extend types, projector, repo, service, and controller (steps 2–7) until the API is ready for frontend development.
+
+## Conventions
+
+- One **module** per feature under `src/modules/`. No separate route file; routes are registered inside the Controller.
+- Module layers: **types** → **projector** (optional) → **repo** → **service** → **controller**.
+- Shared types: `src/types/request.ts` (`AuthenticatedRequest`), `src/types/response.ts` (`HandlerResponse`).
+- Shared schemas: `src/shared/schemas` — `idParamSchema`, `withPaginationQuery`, `paginationResponseSchema`, `VALIDATION_MSG`, etc.
+- Prisma: single instance from `PrismaClientFactory.createInstance()` in `src/shared/database/client.ts`; type import from `./shared/database/prisma/client`.

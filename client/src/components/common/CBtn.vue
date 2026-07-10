@@ -6,5 +6,5 @@
 </script>
 
 <template>
-  <q-btn no-caps glossy color="lime-1" />
+  <q-btn no-caps color="lime-1" />
 </template>

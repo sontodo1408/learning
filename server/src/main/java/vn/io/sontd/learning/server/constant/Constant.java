@@ -3,11 +3,16 @@ package vn.io.sontd.learning.server.constant;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Miscellaneous application-wide constants: security-related values and
+ * HTTP header names shared across controllers/filters.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Constant {
     // SECURITY
-    public static final String[] INTERNAL_PERMIT_ALL = {"/api/v1/auth/login",
-            "/api/v1/auth/init", "/test/**"};
+    /** URL patterns that bypass JWT authentication entirely (see JwtAuthenticationFilter). */
+    public static final String[] INTERNAL_PERMIT_ALL = {"/api/auth/login", "/test/**"};
+    /** JWT claim name used to carry the user's DB-encoded password. */
     public static final String PASSWORD_CLAIM = "password_claim";
 
     // HEADER

@@ -1,0 +1,96 @@
+// FONT SIZE
+* {
+  font-family: "Be Vietnam Pro", sans-serif;
+}
+
+.font-dancing {
+  font-family: "Dancing Script", cursive;
+}
+
+// COMMON BOX
+.common-box {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  margin-bottom: 20px;
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.2),
+    0 2px 2px rgba(0, 0, 0, 0.14),
+    0 3px 1px -2px rgba(0, 0, 0, 0.12);
+
+  &.radius {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .box-title {
+    background-color: $lime-1;
+    color: white;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .box-title-simple {
+    background-color: white;
+    color: $lime-1;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid $lime-1;
+  }
+
+  .box-content {
+    overflow: auto;
+    flex: 1;
+  }
+}
+
+// DIALOG
+.q-dialog__inner--minimized > div {
+  max-width: unset;
+}
+.c-dialog {
+  min-width: 350px;
+
+  &.q-card {
+    background-color: transparent !important;
+  }
+
+  .dialog-header {
+    height: 40px;
+    position: relative;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    background-color: $lime-1;
+    font-size: 16px;
+  }
+
+  .dialog-content {
+    padding: 16px;
+    overflow: auto;
+    max-height: calc(100vh - 150px);
+    background-color: $lime-6;
+  }
+
+  .dialog-btn-container {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    padding-top: 8px;
+    padding-bottom: 12px;
+    gap: 8px;
+    background-color: $lime-6;
+  }
+}
+
+// LAYOUT
+.layout-admin .q-page {
+  padding: 15px;
+}
