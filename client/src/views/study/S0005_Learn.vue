@@ -87,7 +87,7 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
 </script>
 
 <template>
-  <q-page class="learn-page tw:p-4">
+  <q-page class="learn-page">
     <div class="learn-page__progress-text">
       {{ t('S0005.label.progress', { current: currentIndex + 1, total: QUESTIONS.length }) }}
     </div>

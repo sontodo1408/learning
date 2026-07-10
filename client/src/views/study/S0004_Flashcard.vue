@@ -71,7 +71,7 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
 </script>
 
 <template>
-  <q-page class="flashcard-page tw:p-4">
+  <q-page class="flashcard-page">
     <div class="flashcard" @click="handleFlipCard">
       <div class="flashcard__inner" :class="{ 'flashcard__inner--flipped': isFlipped }">
         <div class="flashcard__face flashcard__face--front">

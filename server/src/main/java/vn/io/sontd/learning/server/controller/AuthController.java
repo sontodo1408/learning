@@ -14,7 +14,7 @@ import vn.io.sontd.learning.server.service.AuthService;
  * Authentication endpoints: login and current-session verification.
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController extends BaseController {
     private final AuthService authService;

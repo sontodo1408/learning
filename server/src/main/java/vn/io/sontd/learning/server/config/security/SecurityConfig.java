@@ -133,7 +133,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:9000", "https://sontd.io.vn", "http://192.168.19.57:9000")); // frontend URL
+        config.setAllowedOrigins(List.of("http://localhost:9000", "http://localhost:5173", "https://sontd.io.vn", "http://192.168.19.57:9000")); // frontend URL
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 

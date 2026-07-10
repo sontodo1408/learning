@@ -9,6 +9,6 @@ import vn.io.sontd.learning.server.controller.BaseController;
  * Currently a placeholder pending its first endpoint implementation.
  */
 @RestController
-@RequestMapping("/api/admin/video-vocab")
+@RequestMapping("/api/v1/admin/video-vocab")
 public class AdminVideoVocabController extends BaseController {
 }

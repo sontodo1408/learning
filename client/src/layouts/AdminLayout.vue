@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
 import { LOCALE_OPTIONS, setLocale } from '@/i18n';
+import { useAuthStore } from '@/stores/auth-store';
+import authService from '@/services/auth-service';
 
 import logo_o from '@/assets/imgs/logo_o.png';
 
@@ -11,9 +13,16 @@ import logo_o from '@/assets/imgs/logo_o.png';
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
+const authStore = useAuthStore();
 
 /** The currently active locale's display option (name + flag) */
 const currentLocaleOption = computed(() => LOCALE_OPTIONS.find((option) => option.code === locale.value));
+
+/** Display name shown in the account menu: prefer the full name, fall back to the username */
+const userDisplayName = computed(() => authStore.user?.fullName || authStore.user?.username || '');
+
+/** First letter of the display name, used as the avatar's placeholder initial */
+const userInitial = computed(() => userDisplayName.value.charAt(0).toUpperCase() || '?');
 
 /** Sidebar navigation items; labels are recomputed whenever the active locale changes */
 const navItem = computed(() => [
@@ -32,6 +41,12 @@ const toggleLeftDrawer = () => { leftDrawerOpen.value = !leftDrawerOpen.value; }
 
 const navItemOnClick = (item) => {
   router.push({ name: item.to });
+};
+
+/** Clear the session and send the user back to the login screen */
+const handleLogout = () => {
+  authService.logout();
+  router.push({ name: ROUTER_NAME.LOGIN });
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
@@ -64,10 +79,32 @@ const navItemOnClick = (item) => {
           </q-menu>
         </q-btn>
 
-        <!-- <div class="tw:mx-3">{{ `${auth.ME.lastName} ${auth.ME.firstName}` }}</div> -->
-        <q-btn round flat>
+        <q-btn round flat class="tw:mr-2">
           <q-img :src="logo_o" alt="" width="25px" />
           <q-tooltip class="tw:whitespace-nowrap">{{ t('common.app.name') }}</q-tooltip>
+        </q-btn>
+
+        <!-- Account menu: shows the current user's name, logout below -->
+        <q-btn round flat>
+          <q-avatar size="32px" color="lime-1" text-color="white">{{ userInitial }}</q-avatar>
+          <q-menu anchor="bottom right" self="top right">
+            <q-list style="min-width: 180px">
+              <q-item>
+                <q-item-section>
+                  <q-item-label>{{ userDisplayName }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable v-close-popup @click="handleLogout">
+                <q-item-section avatar class="tw:min-w-0 tw:pr-2">
+                  <q-icon name="logout" color="negative" />
+                </q-item-section>
+                <q-item-section class="text-negative">{{ t('common.nav.logout') }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
         </q-btn>
       </q-toolbar>
     </q-header>

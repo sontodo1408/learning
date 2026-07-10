@@ -5,7 +5,7 @@
 export default {
   common: {
     app: {
-      name: "SonToDo's Application",
+      name: 'Daily English with Son',
     },
     dialog: {
       notice: 'Notice',
@@ -16,6 +16,7 @@ export default {
       transaction: 'Expense items',
       history: 'History',
       videoVocab: 'Learn Vocab Video',
+      logout: 'Log out',
     },
   },
   S0001: {
@@ -43,7 +44,7 @@ export default {
     label: {
       title: 'Login',
       greeting: 'Welcome back',
-      emailPlaceholder: 'Email',
+      usernamePlaceholder: 'Username',
       passwordPlaceholder: 'Password',
       forgotPassword: 'Forgot password?',
     },

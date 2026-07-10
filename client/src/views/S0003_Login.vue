@@ -3,23 +3,35 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
+import authService from '@/services/auth-service';
+import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
 const router = useRouter();
 
 // 2) =============== VARIABLE REF     ===============
-/** Email input value */
-const email = ref('');
+/** Username input value */
+const username = ref('');
 /** Password input value */
 const password = ref('');
 /** Whether the password field is shown in plain text */
 const showPassword = ref(false);
+/** Whether a login request is in flight (disables the form while awaiting the server) */
+const isLoading = ref(false);
 
 // 3) =============== METHOD/FUNCTION  ===============
-/** Placeholder submit handler: no auth backend yet, so just enter the app */
-const submit = () => {
-  router.push({ name: ROUTER_NAME.HOME });
+/** Log in via AuthService, then enter the app; a rejected login is already surfaced by RestClient's notice dialog */
+const submit = async () => {
+  isLoading.value = true;
+  try {
+    await authService.login(username.value, password.value);
+    router.push({ name: ROUTER_NAME.HOME });
+  } catch {
+    // Nothing else to do: the server's error message was already shown by RestClient
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
@@ -30,20 +42,21 @@ const submit = () => {
     <div class="login-card">
       <div class="login-card__corner"></div>
 
+      <img :src="logoO" alt="" class="login-card__logo" />
       <p class="login-card__greeting">{{ t('S0003.label.greeting') }}</p>
-      <h1 class="login-card__brand">SonToDo</h1>
+      <h1 class="login-card__brand">{{ t('common.app.name') }}</h1>
       <p class="login-card__title">{{ t('S0003.label.title') }}</p>
 
       <form class="login-card__form" @submit.prevent="submit">
-        <q-input v-model="email" type="email" outlined dense bg-color="white" :label="t('S0003.label.emailPlaceholder')"
-          class="login-card__field">
+        <q-input v-model="username" type="text" outlined dense bg-color="white" :disable="isLoading"
+          :label="t('S0003.label.usernamePlaceholder')" class="login-card__field">
           <template v-slot:prepend>
-            <q-icon name="mail_outline" />
+            <q-icon name="person_outline" />
           </template>
         </q-input>
 
         <q-input v-model="password" :type="showPassword ? 'text' : 'password'" outlined dense bg-color="white"
-          :label="t('S0003.label.passwordPlaceholder')" class="login-card__field">
+          :disable="isLoading" :label="t('S0003.label.passwordPlaceholder')" class="login-card__field">
           <template v-slot:prepend>
             <q-icon name="lock_outline" />
           </template>
@@ -55,7 +68,8 @@ const submit = () => {
 
         <a class="login-card__forgot" href="#" @click.prevent>{{ t('S0003.label.forgotPassword') }}</a>
 
-        <CBtn type="submit" no-caps class="login-card__submit" :label="t('S0003.btn.submit')" />
+        <CBtn type="submit" no-caps class="login-card__submit" :label="t('S0003.btn.submit')" :loading="isLoading"
+          :disable="isLoading" />
       </form>
     </div>
   </q-page>
@@ -92,6 +106,13 @@ const submit = () => {
     filter: drop-shadow(-2px 2px 3px rgba($lime-1, 0.25));
   }
 
+  &__logo {
+    display: block;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+  }
+
   &__greeting {
     margin: 0;
     font-family: 'Dancing Script', cursive;
@@ -104,9 +125,10 @@ const submit = () => {
   &__brand {
     margin: 0;
     font-family: 'Be Vietnam Pro', sans-serif;
-    font-size: 40px;
+    font-size: 26px;
+    line-height: 1.2;
     font-weight: 900;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: #3a2a22;
   }
 

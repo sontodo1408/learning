@@ -5,7 +5,7 @@
 export default {
   common: {
     app: {
-      name: "SonToDo's Application",
+      name: 'Daily English with Son',
     },
     dialog: {
       notice: 'Thông báo',
@@ -16,6 +16,7 @@ export default {
       transaction: 'Các mục chi tiêu',
       history: 'Lịch sử',
       videoVocab: 'Học từ vựng qua Video',
+      logout: 'Đăng xuất',
     },
   },
   S0001: {
@@ -43,7 +44,7 @@ export default {
     label: {
       title: 'Đăng nhập',
       greeting: 'Chào bạn quay lại',
-      emailPlaceholder: 'Email',
+      usernamePlaceholder: 'Tên đăng nhập',
       passwordPlaceholder: 'Mật khẩu',
       forgotPassword: 'Quên mật khẩu?',
     },

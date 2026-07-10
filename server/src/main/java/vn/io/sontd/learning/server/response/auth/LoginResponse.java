@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Response payload for {@code POST /api/auth/login} and {@code GET /api/auth/check-login}.
+ * Response payload for {@code POST /api/v1/auth/login} and {@code GET /api/v1/auth/check-login}.
  * Mirrors every {@code UserEntity} field except the password.
  */
 @EqualsAndHashCode(callSuper = true)

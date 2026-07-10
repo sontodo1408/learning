@@ -33,7 +33,7 @@ Each properties file hardcodes its own datasource URL/credentials and JWT secret
 
 Standard layered structure under `vn.io.sontd.learning.server`:
 
-- `controller` / `controller/admin` — `@RestController`s; admin-only endpoints live under the `admin` subpackage with an `/api/admin/...` base path.
+- `controller` / `controller/admin` — `@RestController`s; admin-only endpoints live under the `admin` subpackage with an `/api/v1/admin/...` base path.
 - `service` (interfaces) / `service/impl` (implementations) — e.g. `JwtService`/`JwtServiceImpl`.
 - `repository` — Spring Data JPA interfaces extending `JpaRepository`.
 - `entity` — JPA entities. Every entity extends `BaseEntity` (provides `createdAt`/`updatedAt` via `@EnableJpaAuditing`, set in `ServerApplication`). `@Column(name = ...)` always references a constant from `TableField`, never a string literal.

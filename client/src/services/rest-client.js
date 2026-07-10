@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAppStore } from '@/stores/app-store';
 import dialog from '@/utilities/dialog';
 import i18n from '@/i18n';
 
@@ -58,8 +59,12 @@ export default class RestClient {
 
   /** Send the request and unwrap the server's response envelope */
   #request(method, url, data, config) {
+    const appStore = useAppStore();
+
     return new Promise((resolve, reject) => {
       const axiosConfig = { ...config, url: `${this.#servicePath}${url}`, method, data };
+
+      appStore.setLoading(true);
 
       this.#client
         .request(axiosConfig)
@@ -85,7 +90,8 @@ export default class RestClient {
           const errorData = axios.isAxiosError(error) ? error.response?.data : null;
           notifyIfHasMessage(errorData);
           reject(errorData ?? error);
-        });
+        })
+        .finally(() => appStore.setLoading(false));
     });
   }
 

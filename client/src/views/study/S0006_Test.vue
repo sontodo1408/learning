@@ -93,7 +93,7 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
 </script>
 
 <template>
-  <q-page class="test-page tw:p-4">
+  <q-page class="test-page">
     <div class="test-page__timer-row">
       <div class="test-page__timer">
         <q-icon name="schedule" size="18px" />
