@@ -36,12 +36,17 @@ Standard layered structure under `vn.io.sontd.learning.server`:
 - `controller` / `controller/admin` — `@RestController`s; admin-only endpoints live under the `admin` subpackage with an `/api/v1/admin/...` base path.
 - `service` (interfaces) / `service/impl` (implementations) — e.g. `JwtService`/`JwtServiceImpl`.
 - `repository` — Spring Data JPA interfaces extending `JpaRepository`.
+
 - `entity` — JPA entities. Every entity extends `BaseEntity` (provides `createdAt`/`updatedAt` via `@EnableJpaAuditing`, set in `ServerApplication`). `@Column(name = ...)` always references a constant from `TableField`, never a string literal.
 - `constant` — `TableField` (all table/column name constants), `Constant` (security/header constants, permit-all URL list), `ResponseCode`, `Message`. `constant/enums` holds JPA-mapped enums (e.g. `ERole`, `EGender`, `EUserStatus`), typically annotated `@JsonFormat(shape = NUMBER_INT)` when persisted/serialized as an int.
 - `dto` — request/response DTOs, namespaced by feature (e.g. `dto/auth`).
 - `response` — API envelope types: `ResponseRoot` (code/payload/msg) wraps `ResponseBody`, with `ResponseData<T>` as the generic data-carrying subtype.
 - `config/security` — JWT auth stack (see below).
 - `config/aop` — `LoggingAspect` logs request args/response/exceptions around every `@RequestMapping`-annotated method.
+
+### Layering rule: controller → service → repository
+
+Controllers must call into a `service` interface, never a `repository` directly — no `controller → repository` shortcuts, and no skipping the service layer even for a simple lookup. Every new controller endpoint needs a matching `service`/`service/impl` method to call, even if that method is currently a thin pass-through to the repository. The only exception is `TestController` (`/test`), a scratch endpoint that predates this rule and is intentionally left alone.
 
 ### JWT auth flow
 

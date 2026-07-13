@@ -19,4 +19,6 @@ public class Message {
     public static final String LOGIN_FAIL = "Login thất bại. Hãy kiểm tra lại username và password!";
     /** Message returned when a Google ID token fails verification (invalid, expired, or wrong audience). */
     public static final String GOOGLE_LOGIN_FAIL = "Đăng nhập Google thất bại. Token không hợp lệ hoặc đã hết hạn!";
+    /** Message returned when saving a study set with an id that doesn't exist. */
+    public static final String STUDY_SET_NOT_FOUND = "Không tìm thấy study set với id đã cho!";
 }

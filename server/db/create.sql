@@ -37,7 +37,8 @@ CREATE TABLE study_cards (
     study_set_id                BIGINT          NOT NULL,
     term                        VARCHAR(255)    NOT NULL,
     definition                  TEXT            NOT NULL,
-    pronounce                   VARCHAR(50),
+    pronounce_term              VARCHAR(50),
+    pronounce_def               VARCHAR(50),
     img_url                     VARCHAR(255)    DEFAULT NULL,
     display_order               INT             NOT NULL DEFAULT 0, -- Để sắp xếp thứ tự hiển thị các thẻ trong bộ
     created_at                  DATETIME,

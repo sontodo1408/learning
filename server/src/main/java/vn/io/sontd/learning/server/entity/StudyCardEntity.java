@@ -34,8 +34,12 @@ public class StudyCardEntity extends BaseEntity {
     private String definition;
 
     /** Phonetic/pronunciation hint for the term. */
-    @Column(name = TableField.PRONOUNCE)
-    private String pronounce;
+    @Column(name = TableField.PRONOUNCE_TERM)
+    private String pronounceTerm;
+
+    /** Phonetic/pronunciation hint for the definition. */
+    @Column(name = TableField.PRONOUNCE_DEF)
+    private String pronounceDef;
 
     @Column(name = TableField.IMG_URL)
     private String imgUrl;

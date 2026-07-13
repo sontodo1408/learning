@@ -3,14 +3,21 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Sortable from 'sortablejs';
 import { v4 as uuid } from 'uuid';
+import dialog from '@/utilities/dialog';
+import { DIALOG_BTN } from '@/helpers/const';
+import { useAuthStore } from '@/stores/auth-store';
+import videoVocabService from '@/services/video-vocab-service';
+import D0001_StudySetPicker from './D0001_StudySetPicker.vue';
 import alarmRingSound from '@/assets/sounds/alarm_ring.wav';
 import phoneBackground from '@/assets/imgs/video_learn_vocab_background.png';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 /** Create a fresh, empty vocab card. `uid` is the client-side key; `id` is reserved for the server-side id (set later) */
-const newCard = () => ({ uid: uuid(), id: null, term: '', definition: '', image: null, imageFile: null });
+// `pronounceDef` will be saved to the server's `pronounce_def` field
+const newCard = () => ({ uid: uuid(), id: null, term: '', pronounceDef: '', definition: '', image: null, imageFile: null });
 
 // Durations for the playback sequence: ringing alarm -> masked question w/ countdown -> revealed answer
 const ALARM_DURATION_MS = 3000;
@@ -20,6 +27,10 @@ const ANSWER_DURATION_MS = 3000;
 // 2) =============== VARIABLE REF     ===============
 /** List of vocab cards being edited */
 const cards = ref([newCard()]);
+/** Study set currently loaded into the editor, if any (its studyCards were used to fill `cards`) */
+const selectedStudySet = ref(null);
+/** Whether a save request is in flight */
+const saving = ref(false);
 /** Wrapper element of the card list, used to attach SortableJS */
 const listRef = ref(null);
 /** Map of hidden file input elements keyed by card uid, used to open the file picker */
@@ -70,6 +81,69 @@ const removeImage = (card) => {
 
 /** Log all card data to the console for easy inspection */
 const logCards = () => { console.log(cards.value); };
+
+/** Map a server study card into this editor's card shape */
+const cardFromStudyCard = (studyCard) => ({
+  uid: uuid(),
+  id: studyCard.id,
+  term: studyCard.term ?? '',
+  definition: studyCard.definition ?? '',
+  pronounceDef: studyCard.pronounceDef ?? '',
+  image: studyCard.imgUrl ?? null,
+  imageFile: null,
+});
+
+/** Open the study set picker dialog and load the chosen set's cards into the editor */
+const openStudySetPicker = async () => {
+  const studySet = await dialog.showContent(t('S0002.label.selectStudySetTitle'), D0001_StudySetPicker, {
+    width: '480px',
+    showHeader: true,
+  });
+  if (!studySet) { return; }
+
+  selectedStudySet.value = studySet;
+  cards.value = studySet.studyCards?.length ? studySet.studyCards.map(cardFromStudyCard) : [newCard()];
+};
+
+/** Build the POST /admin/video-vocab/study-sets request from the current editor state */
+const buildSaveRequest = () => ({
+  id: selectedStudySet.value?.id ?? null,
+  userId: selectedStudySet.value?.userId ?? authStore.user?.id,
+  // Title is left for the backend to fill in with its fixed default when creating a new set
+  title: selectedStudySet.value?.title ?? null,
+  description: selectedStudySet.value?.description ?? '',
+  isPublic: selectedStudySet.value?.isPublic ?? true,
+  studyCards: cards.value.map((card, index) => ({
+    term: card.term,
+    definition: card.definition,
+    pronounceTerm: '',
+    pronounceDef: card.pronounceDef,
+    // No image-upload endpoint exists yet — only pass through a real (already-hosted) URL,
+    // never a local blob: preview, which would be meaningless once this page is reloaded.
+    imgUrl: card.image?.startsWith('blob:') ? null : card.image,
+    displayOrder: index + 1,
+  })),
+});
+
+/** Save the study set together with its cards (creates if none was picked, updates otherwise) */
+const saveStudySet = async () => {
+  saving.value = true;
+  try {
+    const saved = await videoVocabService.saveStudySet(buildSaveRequest());
+    selectedStudySet.value = saved;
+    cards.value = saved.studyCards?.length ? saved.studyCards.map(cardFromStudyCard) : [newCard()];
+    dialog.showMessage(t('common.dialog.notice'), t('S0002.label.saveSuccess'));
+  } finally {
+    saving.value = false;
+  }
+};
+
+/** Ask the user to confirm before saving, then save if they agree */
+const confirmSaveStudySet = async () => {
+  const answer = await dialog.showConfirm(t('common.dialog.confirm'), t('S0002.label.saveConfirm'));
+  if (answer !== DIALOG_BTN.YES) { return; }
+  await saveStudySet();
+};
 
 // --- Playback: ringing alarm -> masked question w/ countdown -> revealed answer -> next card ---
 /** The card currently shown by the playback sequence */
@@ -233,6 +307,11 @@ onBeforeUnmount(() => {
 <template>
   <q-page class="flex">
     <div class="tw:flex-1 tw:pr-20 tw:h-full tw:overflow-y-auto tw:p-4">
+      <div class="tw:mb-3 tw:text-gray-700">
+        <span class="tw:font-medium">{{ t('S0002.label.studySetTitle') }}:</span>
+        <span class="tw:ml-1">{{ selectedStudySet?.title }}</span>
+      </div>
+
       <div ref="listRef">
         <div v-for="card in cards" :key="card.uid"
           class="tw:flex tw:items-center tw:border tw:border-gray-200 tw:rounded-lg tw:bg-white tw:mb-3">
@@ -244,6 +323,11 @@ onBeforeUnmount(() => {
 
           <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
             <q-input v-model="card.definition" :placeholder="t('S0002.label.definitionPlaceholder')" borderless dense />
+          </div>
+
+          <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
+            <q-input v-model="card.pronounceDef" :placeholder="t('S0002.label.pronounceDefPlaceholder')" borderless
+              dense />
           </div>
 
           <div class="image-picker tw:relative tw:w-16 tw:h-16 tw:my-3 tw:mx-2 tw:shrink-0">
@@ -269,11 +353,15 @@ onBeforeUnmount(() => {
 
       <div class="tw:flex tw:gap-2">
         <c-btn flat no-caps icon="add" :label="t('S0002.btn.addCard')" color="primary" @click="addCard" />
+        <c-btn flat no-caps icon="folder_open" :label="t('S0002.btn.selectStudySet')" color="grey-7"
+          @click="openStudySetPicker" />
         <c-btn flat no-caps icon="bug_report" :label="t('S0002.btn.logData')" color="grey-7" @click="logCards" />
         <c-btn v-if="playStage === 'idle'" flat no-caps icon="play_circle" :label="t('S0002.btn.play')"
           color="secondary" @click="startPlayback" />
         <c-btn v-else flat no-caps icon="stop_circle" :label="t('S0002.btn.stop')" color="negative"
           @click="stopPlayback" />
+        <c-btn unelevated no-caps icon="save" :label="t('S0002.btn.save')" :loading="saving"
+          @click="confirmSaveStudySet" />
       </div>
     </div>
 

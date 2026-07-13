@@ -1,5 +1,6 @@
 export const DIALOG_BTN = {
   YES: "Đồng ý",
+  NO: "Không",
   CLOSE: "Đóng",
   UNDERSTAND: "Tôi đã hiểu",
 };
@@ -21,5 +22,9 @@ export const ROLE = {
 };
 
 // Provide/inject key for the study header (title/tags/progress) rendered by
-// StudyLayout but populated by whichever Flashcard/Learn/Test screen is active.
+// S0008_Study but populated by whichever Flashcard/Learn/Test screen is active.
 export const STUDY_HEADER_KEY = "study-header";
+
+// Provide/inject key for the study set (with its studyCards) fetched once by
+// S0008_Study from the :setId route param, shared with whichever mode screen is active.
+export const STUDY_SET_KEY = "study-set";

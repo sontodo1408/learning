@@ -9,6 +9,7 @@ export default {
     },
     dialog: {
       notice: 'Thông báo',
+      confirm: 'Xác nhận',
     },
     nav: {
       dashboard: 'Dashboard',
@@ -17,6 +18,7 @@ export default {
       history: 'Lịch sử',
       videoVocab: 'Học từ vựng qua Video',
       logout: 'Đăng xuất',
+      signIn: 'Đăng nhập',
     },
   },
   S0001: {
@@ -30,11 +32,20 @@ export default {
       logData: 'Xem dữ liệu',
       play: 'Bắt đầu',
       stop: 'Dừng',
+      selectStudySet: 'Chọn học phần',
+      save: 'Lưu',
     },
     label: {
+      studySetTitle: 'Tên học phần',
       termPlaceholder: 'Từ vựng',
+      pronounceDefPlaceholder: 'Phiên âm',
       definitionPlaceholder: 'Định nghĩa',
       ringing: 'Reng reng!',
+      selectStudySetTitle: 'Chọn học phần',
+      noStudySets: 'Chưa có học phần nào',
+      studySetCardCount: '{count} thẻ',
+      saveSuccess: 'Đã lưu học phần thành công!',
+      saveConfirm: 'Bạn có chắc chắn muốn lưu học phần này không?',
     },
   },
   S0003: {
@@ -49,17 +60,6 @@ export default {
       passwordPlaceholder: 'Mật khẩu',
       forgotPassword: 'Quên mật khẩu?',
       orDivider: 'Hoặc',
-    },
-  },
-  // Shared chrome for StudyLayout (Flashcard/Learn/Test mode sidebar + tab bar)
-  study: {
-    nav: {
-      flashcards: 'Thẻ ghi nhớ',
-      learn: 'Học',
-      test: 'Kiểm tra',
-      newStudySet: 'Học phần mới',
-      settings: 'Cài đặt',
-      help: 'Trợ giúp',
     },
   },
   S0004: {
@@ -104,7 +104,25 @@ export default {
   },
   S0007: {
     label: {
-      title: 'Trang chủ',
+      home: 'Trang chủ',
+      mySets: 'Học phần của tôi',
+      newStudySet: 'Học phần mới',
+      settings: 'Cài đặt',
+      help: 'Trợ giúp',
+      dailyVocabTitle: 'Daily English Vocabulary',
+      dailyVocabSubtitle: 'Học từ vựng tiếng Anh mỗi ngày',
+      recentTitle: 'Đã học gần đây',
+      recentSubtitle: 'Tiếp tục từ nơi bạn đã dừng lại',
+    },
+  },
+  S0008: {
+    label: {
+      flashcards: 'Thẻ ghi nhớ',
+      learn: 'Học',
+      test: 'Kiểm tra',
+      newStudySet: 'Học phần mới',
+      settings: 'Cài đặt',
+      help: 'Trợ giúp',
     },
   },
 };

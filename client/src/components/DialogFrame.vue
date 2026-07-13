@@ -28,7 +28,8 @@ const btnClick = (id, btn) => {
         <div>{{ item.title }}</div>
       </div>
       <div v-if="item.config.isComponent">
-        <component :is="item.content" v-bind="item.config.params" @done="(v) => dialog.hide(item.id, v)" />
+        <component :is="item.content" v-bind="item.config.params" @done="(v) => dialog.hide(item.id, v)"
+          class="tw:bg-lime-6" />
       </div>
       <q-card-section v-if="!item.config.isComponent" class="tw:bg-lime-6">
         <div class="tw:whitespace-break-spaces">{{ item.content }}</div>

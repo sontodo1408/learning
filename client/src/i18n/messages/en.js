@@ -9,6 +9,7 @@ export default {
     },
     dialog: {
       notice: 'Notice',
+      confirm: 'Confirm',
     },
     nav: {
       dashboard: 'Dashboard',
@@ -17,6 +18,7 @@ export default {
       history: 'History',
       videoVocab: 'Learn Vocab Video',
       logout: 'Log out',
+      signIn: 'Sign in',
     },
   },
   S0001: {
@@ -30,11 +32,20 @@ export default {
       logData: 'Log data',
       play: 'Start',
       stop: 'Stop',
+      selectStudySet: 'Select study set',
+      save: 'Save',
     },
     label: {
+      studySetTitle: 'Study Set Title',
       termPlaceholder: 'Term',
+      pronounceDefPlaceholder: 'Pronunciation',
       definitionPlaceholder: 'Definition',
       ringing: 'Ring ring!',
+      selectStudySetTitle: 'Select study set',
+      noStudySets: 'No study sets yet',
+      studySetCardCount: '{count} cards',
+      saveSuccess: 'Study set saved successfully!',
+      saveConfirm: 'Are you sure you want to save this study set?',
     },
   },
   S0003: {
@@ -49,17 +60,6 @@ export default {
       passwordPlaceholder: 'Password',
       forgotPassword: 'Forgot password?',
       orDivider: 'Or',
-    },
-  },
-  // Shared chrome for StudyLayout (Flashcard/Learn/Test mode sidebar + tab bar)
-  study: {
-    nav: {
-      flashcards: 'Flashcards',
-      learn: 'Learn',
-      test: 'Test',
-      newStudySet: 'New Study Set',
-      settings: 'Settings',
-      help: 'Help',
     },
   },
   S0004: {
@@ -104,7 +104,25 @@ export default {
   },
   S0007: {
     label: {
-      title: 'Home',
+      home: 'Home',
+      mySets: 'My study sets',
+      newStudySet: 'New study set',
+      settings: 'Settings',
+      help: 'Help',
+      dailyVocabTitle: 'Daily English Vocabulary',
+      dailyVocabSubtitle: 'Learn a little English every day',
+      recentTitle: 'Recently visited',
+      recentSubtitle: 'Pick up right where you left off',
+    },
+  },
+  S0008: {
+    label: {
+      flashcards: 'Flashcards',
+      learn: 'Learn',
+      test: 'Test',
+      newStudySet: 'New Study Set',
+      settings: 'Settings',
+      help: 'Help',
     },
   },
 };

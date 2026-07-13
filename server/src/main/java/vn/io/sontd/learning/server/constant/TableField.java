@@ -46,7 +46,8 @@ public class TableField {
     public static final String STUDY_SET_ID = "study_set_id";
     public static final String TERM = "term";
     public static final String DEFINITION = "definition";
-    public static final String PRONOUNCE = "pronounce";
+    public static final String PRONOUNCE_TERM = "pronounce_term";
+    public static final String PRONOUNCE_DEF = "pronounce_def";
     public static final String IMG_URL = "img_url";
     public static final String DISPLAY_ORDER = "display_order";
 

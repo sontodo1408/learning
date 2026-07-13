@@ -26,36 +26,48 @@ const router = createRouter({
     },
     {
       path: "/study/:setId",
-      component: () => import("@/layouts/StudyLayout.vue"),
+      component: () => import("@/layouts/UserLayout.vue"),
       children: [
         {
-          path: "flashcards",
-          name: ROUTER_NAME.FLASHCARD,
-          component: () => import("@/views/study/S0004_Flashcard.vue"),
-        },
-        {
-          path: "learn",
-          name: ROUTER_NAME.LEARN,
-          component: () => import("@/views/study/S0005_Learn.vue"),
-        },
-        {
-          path: "test",
-          name: ROUTER_NAME.TEST,
-          component: () => import("@/views/study/S0006_Test.vue"),
+          path: "",
+          component: () => import("@/views/study/S0008_Study.vue"),
+          children: [
+            {
+              path: "flashcards",
+              name: ROUTER_NAME.FLASHCARD,
+              component: () => import("@/views/study/S0004_Flashcard.vue"),
+            },
+            {
+              path: "learn",
+              name: ROUTER_NAME.LEARN,
+              component: () => import("@/views/study/S0005_Learn.vue"),
+            },
+            {
+              path: "test",
+              name: ROUTER_NAME.TEST,
+              component: () => import("@/views/study/S0006_Test.vue"),
+            },
+          ],
         },
       ],
     },
     {
       path: "/",
-      component: () => import("@/layouts/BlankLayout.vue"),
+      component: () => import("@/layouts/UserLayout.vue"),
       children: [
         {
           path: "",
           name: ROUTER_NAME.USER_HOME,
           component: () => import("@/views/S0007_UserHome.vue"),
         },
+      ],
+    },
+    {
+      path: "/login",
+      component: () => import("@/layouts/BlankLayout.vue"),
+      children: [
         {
-          path: "login",
+          path: "",
           name: ROUTER_NAME.LOGIN,
           component: () => import("@/views/S0003_Login.vue"),
         },

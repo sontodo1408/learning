@@ -27,6 +27,9 @@ public class StudySetEntity extends BaseEntity {
     @Column(name = TableField.USER_ID)
     private Long userId;
 
+    @Column(name = TableField.TITLE)
+    private String title;
+
     @Column(name = TableField.DESCRIPTION)
     private String description;
 
