@@ -22,12 +22,19 @@ public interface StudySetRepository extends JpaRepository<StudySetEntity, Long> 
     List<StudySetEntity> findByTitleContainingOrderByTitleAsc(String title);
 
     /**
-     * Finds the most recently created study sets whose title contains the given substring
-     * (case-sensitive), most recent first.
+     * Finds the most recently created study sets owned by the given user id, most recent first.
      *
-     * @param title    the substring to search for within {@code study_sets.title}
+     * @param userId   the owning user's id (see {@code study_sets.user_id})
      * @param pageable carries the max result count (e.g. {@code PageRequest.of(0, limit)})
      * @return up to {@code pageable}'s page size matching study sets, ordered by creation time descending
      */
-    List<StudySetEntity> findByTitleContainingOrderByCreatedAtDesc(String title, Pageable pageable);
+    List<StudySetEntity> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    /**
+     * Counts study sets whose title contains the given substring (case-sensitive).
+     *
+     * @param title the substring to search for within {@code study_sets.title}
+     * @return the number of matching study sets
+     */
+    long countByTitleContaining(String title);
 }

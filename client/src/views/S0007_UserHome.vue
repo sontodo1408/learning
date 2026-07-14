@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useAuthStore } from '@/stores/auth-store';
+import homeService from '@/services/home-service';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -22,14 +23,6 @@ const navItems = computed(() => [
   { key: 'mySets', icon: 'folder', label: t('S0007.label.mySets') },
 ]);
 
-/** Mock "Daily English Vocabulary" study sets — always visible, even signed out (no API/DB yet) */
-const dailyVocabSets = [
-  { title: 'Daily Vocabulary #1', cardCount: 12 },
-  { title: 'Daily Vocabulary #2', cardCount: 15 },
-  { title: 'Daily Vocabulary #3', cardCount: 10 },
-  { title: 'Daily Vocabulary #4', cardCount: 18 },
-];
-
 /** Mock recently-visited study sets — only shown to a signed-in user (no API/DB yet) */
 const recentSets = [
   { title: 'Biology 101: Cell Structure', cardCount: 5 },
@@ -41,8 +34,19 @@ const recentSets = [
 /** Currently highlighted nav item — purely visual for now, nothing to route to yet */
 const activeKey = ref('home');
 
+/** "Daily English Vocabulary" study sets, fetched from GET /home/newest-study-sets */
+const dailyVocabSets = ref([]);
+
 // 3) =============== METHOD/FUNCTION  ===============
 // 4) =============== VUE JS LIFECYCLE ===============
+onMounted(async () => {
+  const studySets = await homeService.getNewestStudySets();
+  dailyVocabSets.value = studySets.map((studySet) => ({
+    id: studySet.id,
+    title: studySet.title,
+    cardCount: studySet.studyCards?.length ?? 0,
+  }));
+});
 </script>
 
 <template>
@@ -92,7 +96,7 @@ const activeKey = ref('home');
           <p class="home-section__subtitle">{{ t('S0007.label.dailyVocabSubtitle') }}</p>
 
           <div class="study-set-row">
-            <div v-for="set in dailyVocabSets" :key="set.title" class="study-set-card">
+            <div v-for="set in dailyVocabSets" :key="set.id" class="study-set-card">
               <q-icon name="menu_book" size="26px" color="lime-1" />
               <div class="study-set-card__title">{{ set.title }}</div>
               <div class="study-set-card__count">

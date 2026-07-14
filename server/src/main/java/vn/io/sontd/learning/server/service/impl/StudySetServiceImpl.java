@@ -95,8 +95,8 @@ public class StudySetServiceImpl implements StudySetService {
             return List.of();
         }
 
-        List<StudySetEntity> studySets = studySetRepository.findByTitleContainingOrderByCreatedAtDesc(
-                Constant.DAILY_VOCAB_TITLE_PREFIX, PageRequest.of(0, limit));
+        List<StudySetEntity> studySets = studySetRepository.findByUserIdOrderByCreatedAtDesc(
+                Constant.VIDEO_VOCAB_USER_ID, PageRequest.of(0, limit));
         List<Long> studySetIds = studySets.stream().map(StudySetEntity::getId).toList();
 
         Map<Long, List<StudyCardDTO>> cardsByStudySetId = studyCardRepository.findByStudySetIdInOrderByDisplayOrderAsc(studySetIds)
@@ -111,13 +111,21 @@ public class StudySetServiceImpl implements StudySetService {
 
     /**
      * {@inheritDoc}
-     * If updating an existing study set, its old cards are deleted before
-     * the new ones are inserted, rather than matched/merged one by one.
-     * {@code title} and {@code description} are always auto-generated (as
-     * {@link Constant#DAILY_VOCAB_TITLE_PREFIX} and {@link Constant#DAILY_VOCAB_DESCRIPTION_PREFIX}
-     * respectively, each followed by the study set's id), ignoring any title/description
-     * on the request; for a brand-new study set this means an initial save (to obtain the
-     * generated id) followed by a second save that fills in the real title/description.
+     * If updating an existing study set, its old cards are deleted before the new ones are
+     * inserted, rather than matched/merged one by one; its {@code title}/{@code description}
+     * are left untouched (whatever this study set was assigned when first created).
+     * <p>
+     * For a brand-new study set, {@code title} and {@code description} are always auto-generated
+     * (as {@link Constant#DAILY_VOCAB_TITLE_PREFIX} and {@link Constant#DAILY_VOCAB_DESCRIPTION_PREFIX}
+     * respectively, each followed by a sequential number), ignoring any title/description on the
+     * request. That number is simply how many "Daily Vocab" study sets exist once this one is
+     * inserted (e.g. the 11th such set becomes {@code #11}) — it tracks that count, not this study
+     * set's own database id, so it needs an initial placeholder-title save (to create the row and
+     * get it counted) followed by a second save that fills in the real title/description.
+     * <p>
+     * {@code userId} is likewise always {@link Constant#VIDEO_VOCAB_USER_ID}, ignoring any
+     * user id on the request — every study set saved through this method belongs to the
+     * "video vocab" feature, not a real user.
      */
     @Override
     @Transactional
@@ -134,18 +142,20 @@ public class StudySetServiceImpl implements StudySetService {
                     .orElseThrow(() -> new BusinessException(Message.STUDY_SET_NOT_FOUND));
             studyCardRepository.deleteByStudySetId(studySet.getId());
         }
-        studySet.setUserId(request.getUserId());
+        studySet.setUserId(Constant.VIDEO_VOCAB_USER_ID);
         studySet.setIsPublic(request.getIsPublic());
 
         if (isNew) {
-            // Title is NOT NULL, so seed a placeholder to obtain the generated id before building the id-based values.
+            // Title is NOT NULL, so seed a placeholder to obtain the generated id and get this
+            // row counted below, before filling in the real, sequentially-numbered title/description.
             studySet.setTitle(Constant.DAILY_VOCAB_TITLE_PREFIX);
             studySet = studySetRepository.save(studySet);
+
+            long sequenceNumber = studySetRepository.countByTitleContaining(Constant.DAILY_VOCAB_TITLE_PREFIX);
+            studySet.setTitle(Constant.DAILY_VOCAB_TITLE_PREFIX + sequenceNumber);
+            studySet.setDescription(Constant.DAILY_VOCAB_DESCRIPTION_PREFIX + sequenceNumber);
+            studySet = studySetRepository.save(studySet);
         }
-        // Both title and description embed the study set's id, so they're finalized once the id is known.
-        studySet.setTitle(Constant.DAILY_VOCAB_TITLE_PREFIX + studySet.getId());
-        studySet.setDescription(Constant.DAILY_VOCAB_DESCRIPTION_PREFIX + studySet.getId());
-        studySet = studySetRepository.save(studySet);
         Long studySetId = studySet.getId();
 
         List<StudyCardEntity> newCards = request.getStudyCards() == null ? List.of()

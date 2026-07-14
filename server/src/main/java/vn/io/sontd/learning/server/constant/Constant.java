@@ -45,4 +45,12 @@ public class Constant {
      * is this prefix immediately followed by the study set's id (see {@code StudySetServiceImpl.saveStudySet}).
      */
     public static final String DAILY_VOCAB_DESCRIPTION_PREFIX = "Daily English with Mr.Son - Vocabulary #";
+    /**
+     * Reserved {@code study_sets.user_id} value marking a study set as owned by the "video vocab"
+     * feature rather than a real {@code users} row — negative, so it can never collide with an
+     * actual auto-incremented user id. Used both when saving (see
+     * {@code StudySetServiceImpl.saveStudySet}) and when querying (see
+     * {@code StudySetServiceImpl.findRecentlyCreated}) these study sets.
+     */
+    public static final Long VIDEO_VOCAB_USER_ID = -1L;
 }

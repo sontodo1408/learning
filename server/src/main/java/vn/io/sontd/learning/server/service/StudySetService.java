@@ -41,8 +41,8 @@ public interface StudySetService {
     List<StudySetDTO> findByIds(List<Long> ids);
 
     /**
-     * Finds the most recently created "Daily Vocabulary" study sets (title containing
-     * {@link vn.io.sontd.learning.server.constant.Constant#DAILY_VOCAB_TITLE_PREFIX}),
+     * Finds the most recently created "Daily Vocabulary" study sets (owned by
+     * {@link vn.io.sontd.learning.server.constant.Constant#VIDEO_VOCAB_USER_ID}),
      * each with its study cards attached.
      *
      * @param limit the maximum number of study sets to return; non-positive values yield an empty list
