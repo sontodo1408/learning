@@ -79,11 +79,6 @@ const handleLogout = () => {
           </q-menu>
         </q-btn>
 
-        <q-btn round flat class="tw:mr-2">
-          <q-img :src="logo_o" alt="" width="25px" />
-          <q-tooltip class="tw:whitespace-nowrap">{{ t('common.app.name') }}</q-tooltip>
-        </q-btn>
-
         <!-- Account menu: shows the current user's name, logout below -->
         <q-btn round flat>
           <q-avatar size="32px" color="lime-1" text-color="white">{{ userInitial }}</q-avatar>

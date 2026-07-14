@@ -33,7 +33,7 @@ onMounted(async () => {
 
 <template>
   <div class="study-set-picker">
-    <q-list separator class="study-set-picker__list">
+    <q-list separator class="study-set-picker__list tw:p-4">
       <q-item v-if="loading">
         <q-item-section class="tw:items-center">
           <q-spinner color="primary" size="24px" />
@@ -64,8 +64,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .study-set-picker {
-  padding: 20px;
-
   &__list {
     max-height: 60vh;
     overflow-y: auto;

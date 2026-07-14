@@ -21,4 +21,10 @@ public class Message {
     public static final String GOOGLE_LOGIN_FAIL = "Đăng nhập Google thất bại. Token không hợp lệ hoặc đã hết hạn!";
     /** Message returned when saving a study set with an id that doesn't exist. */
     public static final String STUDY_SET_NOT_FOUND = "Không tìm thấy study set với id đã cho!";
+    /** Message returned when a JSON string can't be parsed into the target type (see {@code CommonUtils.parseJson}). */
+    public static final String INVALID_JSON = "Dữ liệu JSON không hợp lệ!";
+    /** Message returned when a card references an uploaded file index that doesn't exist in the request. */
+    public static final String IMAGE_FILE_INDEX_INVALID = "Chỉ số file ảnh không hợp lệ!";
+    /** Message returned when an uploaded image can't be stored (empty file or I/O error). */
+    public static final String IMAGE_UPLOAD_FAIL = "Lưu ảnh thất bại. Vui lòng thử lại!";
 }

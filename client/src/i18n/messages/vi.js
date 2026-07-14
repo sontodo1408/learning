@@ -5,7 +5,7 @@
 export default {
   common: {
     app: {
-      name: 'Daily English with Son',
+      name: 'Daily English with Mr.Son',
     },
     dialog: {
       notice: 'Thông báo',
@@ -19,6 +19,11 @@ export default {
       videoVocab: 'Học từ vựng qua Video',
       logout: 'Đăng xuất',
       signIn: 'Đăng nhập',
+    },
+  },
+  userLayout: {
+    label: {
+      searchPlaceholder: 'Tìm kiếm học phần',
     },
   },
   S0001: {
@@ -80,7 +85,7 @@ export default {
       report: 'Báo lỗi',
     },
     label: {
-      definitionTag: 'Định nghĩa',
+      termTag: 'Từ vựng',
       progress: '{current} / {total} từ',
       hintText: 'Đáp án bắt đầu bằng chữ "{letter}"',
       roundComplete: 'Bạn đã hoàn thành lượt học này!',
@@ -92,14 +97,10 @@ export default {
       submit: 'Nộp bài',
     },
     label: {
-      multipleChoice: 'Trắc nghiệm',
-      trueFalse: 'Đúng / Sai',
-      true: 'Đúng',
-      false: 'Sai',
       questionProgress: 'Đã trả lời {current} / {total} câu',
       completed: '{percent}% hoàn thành',
       points: '{points} điểm',
-      submitted: 'Bạn đã nộp bài thành công!',
+      submitted: 'Bạn đã trả lời đúng {correct} / {total} câu!',
     },
   },
   S0007: {

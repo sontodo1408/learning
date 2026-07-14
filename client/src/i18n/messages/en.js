@@ -5,7 +5,7 @@
 export default {
   common: {
     app: {
-      name: 'Daily English with Son',
+      name: 'Daily English with Mr.Son',
     },
     dialog: {
       notice: 'Notice',
@@ -19,6 +19,11 @@ export default {
       videoVocab: 'Learn Vocab Video',
       logout: 'Log out',
       signIn: 'Sign in',
+    },
+  },
+  userLayout: {
+    label: {
+      searchPlaceholder: 'Search study sets',
     },
   },
   S0001: {
@@ -80,7 +85,7 @@ export default {
       report: 'Report',
     },
     label: {
-      definitionTag: 'Definition',
+      termTag: 'Term',
       progress: '{current} / {total} Terms',
       hintText: 'The answer starts with "{letter}"',
       roundComplete: "You've completed this round!",
@@ -92,14 +97,10 @@ export default {
       submit: 'Submit Test',
     },
     label: {
-      multipleChoice: 'Multiple Choice',
-      trueFalse: 'True / False',
-      true: 'True',
-      false: 'False',
       questionProgress: '{current} / {total} answered',
       completed: '{percent}% Completed',
       points: '{points} pt',
-      submitted: 'Your test has been submitted!',
+      submitted: 'You answered {correct} / {total} correctly!',
     },
   },
   S0007: {

@@ -5,6 +5,7 @@ import Sortable from 'sortablejs';
 import { v4 as uuid } from 'uuid';
 import dialog from '@/utilities/dialog';
 import { DIALOG_BTN } from '@/helpers/const';
+import { resolveImageUrl } from '@/utilities/common';
 import { useAuthStore } from '@/stores/auth-store';
 import videoVocabService from '@/services/video-vocab-service';
 import D0001_StudySetPicker from './D0001_StudySetPicker.vue';
@@ -17,7 +18,9 @@ const authStore = useAuthStore();
 
 /** Create a fresh, empty vocab card. `uid` is the client-side key; `id` is reserved for the server-side id (set later) */
 // `pronounceDef` will be saved to the server's `pronounce_def` field
-const newCard = () => ({ uid: uuid(), id: null, term: '', pronounceDef: '', definition: '', image: null, imageFile: null });
+const newCard = () => ({
+  uid: uuid(), id: null, term: '', pronounceDef: '', definition: '', imgUrl: null, image: null, imageFile: null,
+});
 
 // Durations for the playback sequence: ringing alarm -> masked question w/ countdown -> revealed answer
 const ALARM_DURATION_MS = 3000;
@@ -69,14 +72,17 @@ const onImageChange = (event, card) => {
   if (card.image) { URL.revokeObjectURL(card.image); }
   card.image = URL.createObjectURL(file);
   card.imageFile = file;
+  // The new file supersedes whatever was previously hosted for this card
+  card.imgUrl = null;
   event.target.value = '';
 };
 
-/** Clear the card's image, revoke its object URL and drop the stored File */
+/** Clear the card's image (including any previously-hosted one), revoke its object URL and drop the stored File */
 const removeImage = (card) => {
   if (card.image) { URL.revokeObjectURL(card.image); }
   card.image = null;
   card.imageFile = null;
+  card.imgUrl = null;
 };
 
 /** Log all card data to the console for easy inspection */
@@ -89,7 +95,10 @@ const cardFromStudyCard = (studyCard) => ({
   term: studyCard.term ?? '',
   definition: studyCard.definition ?? '',
   pronounceDef: studyCard.pronounceDef ?? '',
-  image: studyCard.imgUrl ?? null,
+  // Raw server-relative path, kept as-is to send back unchanged if the image isn't replaced
+  imgUrl: studyCard.imgUrl ?? null,
+  // Absolute URL for display/preview
+  image: resolveImageUrl(studyCard.imgUrl),
   imageFile: null,
 });
 
@@ -105,31 +114,50 @@ const openStudySetPicker = async () => {
   cards.value = studySet.studyCards?.length ? studySet.studyCards.map(cardFromStudyCard) : [newCard()];
 };
 
-/** Build the POST /admin/video-vocab/study-sets request from the current editor state */
-const buildSaveRequest = () => ({
-  id: selectedStudySet.value?.id ?? null,
-  userId: selectedStudySet.value?.userId ?? authStore.user?.id,
-  // Title is left for the backend to fill in with its fixed default when creating a new set
-  title: selectedStudySet.value?.title ?? null,
-  description: selectedStudySet.value?.description ?? '',
-  isPublic: selectedStudySet.value?.isPublic ?? true,
-  studyCards: cards.value.map((card, index) => ({
-    term: card.term,
-    definition: card.definition,
-    pronounceTerm: '',
-    pronounceDef: card.pronounceDef,
-    // No image-upload endpoint exists yet — only pass through a real (already-hosted) URL,
-    // never a local blob: preview, which would be meaningless once this page is reloaded.
-    imgUrl: card.image?.startsWith('blob:') ? null : card.image,
-    displayOrder: index + 1,
-  })),
-});
+/**
+ * Build the POST /admin/video-vocab/study-sets multipart payload from the current editor state:
+ * the JSON `data` part (note: no `title` — the server always auto-generates it and rejects
+ * unrecognized fields) plus the list of newly-picked image files, each card pointing at its
+ * file via `imageFileIndex` (see server's StudyCardUpsertRequest).
+ */
+const buildSaveRequest = () => {
+  const files = [];
+  const studyCards = cards.value.map((card, index) => {
+    let imageFileIndex = null;
+    if (card.imageFile) {
+      imageFileIndex = files.length;
+      files.push(card.imageFile);
+    }
+    return {
+      term: card.term,
+      definition: card.definition,
+      pronounceTerm: '',
+      pronounceDef: card.pronounceDef,
+      // Kept as-is when the image isn't replaced; the server overwrites it once it stores the
+      // file at imageFileIndex, and it's already null when the card has no image at all.
+      imgUrl: card.imgUrl,
+      displayOrder: index + 1,
+      imageFileIndex,
+    };
+  });
 
-/** Save the study set together with its cards (creates if none was picked, updates otherwise) */
+  const data = {
+    id: selectedStudySet.value?.id ?? null,
+    userId: selectedStudySet.value?.userId ?? authStore.user?.id,
+    description: selectedStudySet.value?.description ?? '',
+    isPublic: selectedStudySet.value?.isPublic ?? true,
+    studyCards,
+  };
+
+  return { data, files };
+};
+
+/** Save the study set together with its cards and any newly-picked images (creates if none was picked, updates otherwise) */
 const saveStudySet = async () => {
   saving.value = true;
   try {
-    const saved = await videoVocabService.saveStudySet(buildSaveRequest());
+    const { data, files } = buildSaveRequest();
+    const saved = await videoVocabService.saveStudySet(data, files);
     selectedStudySet.value = saved;
     cards.value = saved.studyCards?.length ? saved.studyCards.map(cardFromStudyCard) : [newCard()];
     dialog.showMessage(t('common.dialog.notice'), t('S0002.label.saveSuccess'));
@@ -382,6 +410,13 @@ onBeforeUnmount(() => {
 
               <div class="tw:text-white tw:text-2xl tw:tracking-widest tw:text-center">
                 {{ playStage === 'answer' ? currentPlayCard?.definition : maskWord(currentPlayCard?.definition) }}
+              </div>
+
+              <!-- Always rendered (never v-if) so its line height reserves space up front; only
+              its visibility toggles on reveal, so the card doesn't jump when the answer appears -->
+              <div class="tw:text-white/70 tw:text-lg tw:text-center"
+                :class="{ 'tw:invisible': playStage !== 'answer' }">
+                {{ currentPlayCard?.pronounceDef || ' ' }}
               </div>
             </template>
           </div>

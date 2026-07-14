@@ -14,6 +14,7 @@ public class TableField {
     public static final String TBL_USERS = "users";
     public static final String TBL_STUDY_SETS = "study_sets";
     public static final String TBL_STUDY_CARDS = "study_cards";
+    public static final String TBL_STUDY_SET_VIEWS = "study_set_views";
 
     // pagination query params
     public static final String LIMIT = "limit";
@@ -50,5 +51,8 @@ public class TableField {
     public static final String PRONOUNCE_DEF = "pronounce_def";
     public static final String IMG_URL = "img_url";
     public static final String DISPLAY_ORDER = "display_order";
+
+    // study_set_views table columns
+    public static final String VIEWED_AT = "viewed_at";
 
 }

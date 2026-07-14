@@ -1,39 +1,18 @@
 <script setup>
-import { ref, computed, inject, watchEffect, onMounted } from 'vue';
+import { ref, computed, inject, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import dialog from '@/utilities/dialog';
-import { STUDY_HEADER_KEY } from '@/helpers/const';
+import { STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
 const studyHeader = inject(STUDY_HEADER_KEY);
+const studySet = inject(STUDY_SET_KEY);
 
 // How long the selected choice stays highlighted before advancing to the next question
 const ADVANCE_DELAY_MS = 600;
-
-/** Mock questions for the round (no API/DB yet — see docs/04_Screen_Design/03_Learn_Mode.md) */
-const QUESTIONS = [
-  {
-    definition: 'The organelle responsible for producing energy (ATP) in a cell.',
-    choices: ['Mitochondria', 'Nucleus', 'Ribosome', 'Golgi apparatus'],
-    answer: 'Mitochondria',
-  },
-  {
-    definition: "The organelle that contains the cell's genetic material (DNA).",
-    choices: ['Cytoplasm', 'Nucleus', 'Lysosome', 'Vacuole'],
-    answer: 'Nucleus',
-  },
-  {
-    definition: 'The site of protein synthesis within a cell.',
-    choices: ['Ribosome', 'Peroxisome', 'Centriole', 'Golgi apparatus'],
-    answer: 'Ribosome',
-  },
-  {
-    definition: 'The outer boundary that controls what enters and exits the cell.',
-    choices: ['Cell wall', 'Cell membrane', 'Cytoskeleton', 'Nuclear envelope'],
-    answer: 'Cell membrane',
-  },
-];
+// Number of choices shown per question (the correct term + this many distractor terms)
+const DISTRACTOR_COUNT = 3;
 
 // 2) =============== VARIABLE REF     ===============
 /** Index of the question currently shown */
@@ -43,28 +22,50 @@ const selectedChoice = ref(null);
 /** Whether the hint (first letter of the answer) is revealed for the current question */
 const hintRevealed = ref(false);
 
+/** One multiple-choice question per study card: its term as the prompt, its definition as the
+ * correct choice, plus up to DISTRACTOR_COUNT random definitions from the other cards in the set */
+const questions = computed(() => studySet.studyCards.map((card) => {
+  const distractors = studySet.studyCards
+    .filter((other) => other.id !== card.id)
+    .map((other) => other.definition)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, DISTRACTOR_COUNT);
+  return {
+    term: card.term,
+    choices: [card.definition, ...distractors].sort(() => Math.random() - 0.5),
+    answer: card.definition,
+  };
+}));
 /** The question currently shown */
-const currentQuestion = computed(() => QUESTIONS[currentIndex.value]);
-/** Progress fill percentage for the progress bar */
-const progressPercent = computed(() => Math.round(((currentIndex.value + 1) / QUESTIONS.length) * 100));
+const currentQuestion = computed(() => questions.value[currentIndex.value]);
+/** Progress fill percentage for the progress bar; 0% while the study set hasn't loaded yet */
+const progressPercent = computed(() => {
+  if (!questions.value.length) { return 0; }
+  return Math.round(((currentIndex.value + 1) / questions.value.length) * 100);
+});
 
 // 3) =============== METHOD/FUNCTION  ===============
-/** Move to the next question, or announce the round is complete once the last one is answered */
-const advance = () => {
-  if (currentIndex.value >= QUESTIONS.length - 1) {
-    dialog.showMessage(t('common.dialog.notice'), t('S0005.label.roundComplete'));
-    return;
+/** Move to the next question, or announce the round is complete and restart from the first
+ * question once the last one is answered */
+const advance = async () => {
+  if (currentIndex.value >= questions.value.length - 1) {
+    await dialog.showMessage(t('common.dialog.notice'), t('S0005.label.roundComplete'));
+    currentIndex.value = 0;
+  } else {
+    currentIndex.value += 1;
   }
-  currentIndex.value += 1;
   selectedChoice.value = null;
   hintRevealed.value = false;
 };
 
-/** Highlight the picked choice, then advance after a short delay */
+/** Highlight the picked choice; only a correct pick advances (after a short delay) — a wrong
+ * pick just stays highlighted so the learner can try again on the same question */
 const selectChoice = (choice) => {
-  if (selectedChoice.value) { return; }
+  if (selectedChoice.value === currentQuestion.value?.answer) { return; }
   selectedChoice.value = choice;
-  setTimeout(advance, ADVANCE_DELAY_MS);
+  if (choice === currentQuestion.value?.answer) {
+    setTimeout(advance, ADVANCE_DELAY_MS);
+  }
 };
 
 /** Skip the current question without picking a choice (desktop-only "Don't know?" action) */
@@ -77,11 +78,6 @@ const showHint = () => { hintRevealed.value = true; };
 const reportQuestion = () => { dialog.showMessage(t('common.dialog.notice'), t('S0005.label.reportReceived')); };
 
 // 4) =============== VUE JS LIFECYCLE ===============
-onMounted(() => {
-  studyHeader.title = 'Advanced Biology: Cellular Respiration';
-  studyHeader.tags = ['Round 1: Initial Learning'];
-});
-
 // Keep the shared header's progress bar in sync with this screen's own progress
 watchEffect(() => { studyHeader.percent = progressPercent.value; });
 </script>
@@ -89,34 +85,39 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
 <template>
   <q-page class="learn-page">
     <div class="learn-page__progress-text">
-      {{ t('S0005.label.progress', { current: currentIndex + 1, total: QUESTIONS.length }) }}
+      {{ t('S0005.label.progress', { current: currentIndex + 1, total: questions.length }) }}
     </div>
 
-    <div class="learn-question">
-      <q-chip dense square color="lime-5" text-color="lime-1" class="learn-question__tag">
-        {{ t('S0005.label.definitionTag') }}
-      </q-chip>
-      <div class="learn-question__text">{{ currentQuestion.definition }}</div>
-      <div v-if="hintRevealed" class="learn-question__hint">
-        {{ t('S0005.label.hintText', { letter: currentQuestion.answer[0] }) }}
+    <template v-if="currentQuestion">
+      <div class="learn-question">
+        <q-chip dense square color="lime-5" text-color="lime-1" class="learn-question__tag">
+          {{ t('S0005.label.termTag') }}
+        </q-chip>
+        <div class="learn-question__text">{{ currentQuestion.term }}</div>
+        <div v-if="hintRevealed" class="learn-question__hint">
+          {{ t('S0005.label.hintText', { letter: currentQuestion.answer[0] }) }}
+        </div>
       </div>
-    </div>
 
-    <div class="learn-choices">
-      <button v-for="(choice, index) in currentQuestion.choices" :key="choice" type="button" class="learn-choice"
-        :class="{ 'learn-choice--selected': selectedChoice === choice }" @click="selectChoice(choice)">
-        <span class="learn-choice__badge">{{ index + 1 }}</span>
-        <span>{{ choice }}</span>
-      </button>
-    </div>
-
-    <div class="learn-actions">
-      <CBtn flat no-caps :label="t('S0005.btn.dontKnow')" @click="skipQuestion" />
-      <div class="tw:flex tw:gap-2">
-        <CBtn flat no-caps icon="lightbulb" :label="t('S0005.btn.hint')" @click="showHint" />
-        <CBtn flat no-caps icon="flag" :label="t('S0005.btn.report')" @click="reportQuestion" />
+      <div class="learn-choices">
+        <button v-for="(choice, index) in currentQuestion.choices" :key="choice" type="button" class="learn-choice"
+          :class="{
+            'learn-choice--correct': selectedChoice === choice && choice === currentQuestion.answer,
+            'learn-choice--wrong': selectedChoice === choice && choice !== currentQuestion.answer,
+          }" @click="selectChoice(choice)">
+          <span class="learn-choice__badge">{{ index + 1 }}</span>
+          <span>{{ choice }}</span>
+        </button>
       </div>
-    </div>
+
+      <div class="learn-actions">
+        <CBtn flat no-caps :label="t('S0005.btn.dontKnow')" @click="skipQuestion" />
+        <div class="tw:flex tw:gap-2">
+          <CBtn flat no-caps icon="lightbulb" :label="t('S0005.btn.hint')" @click="showHint" />
+          <CBtn flat no-caps icon="flag" :label="t('S0005.btn.report')" @click="reportQuestion" />
+        </div>
+      </div>
+    </template>
   </q-page>
 </template>
 
@@ -192,9 +193,39 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
     font-weight: 700;
   }
 
-  &--selected {
+  &--correct {
     border-color: $lime-1;
     background-color: $lime-5;
+  }
+
+  &--wrong {
+    border-color: $negative;
+    background-color: rgba($negative, 0.08);
+    animation: learn-choice-shake 0.4s ease;
+  }
+}
+
+@keyframes learn-choice-shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-4px);
+  }
+
+  80% {
+    transform: translateX(4px);
   }
 }
 

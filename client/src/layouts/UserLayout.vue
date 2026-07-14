@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
@@ -31,6 +31,9 @@ const userDisplayName = computed(() => authStore.user?.fullName || authStore.use
 const userInitial = computed(() => userDisplayName.value.charAt(0).toUpperCase() || '?');
 
 // 2) =============== VARIABLE REF     ===============
+// Search box in the middle of the header, used to search study sets
+const searchQuery = ref('');
+
 // 3) =============== METHOD/FUNCTION  ===============
 /** Clear the session and send the user back to the login screen */
 const handleLogout = () => {
@@ -43,6 +46,11 @@ const handleSignIn = () => {
   router.push({ name: ROUTER_NAME.LOGIN });
 };
 
+/** Go back to the home screen ("/") when the header logo is clicked */
+const handleLogoClick = () => {
+  router.push({ name: ROUTER_NAME.USER_HOME });
+};
+
 // 4) =============== VUE JS LIFECYCLE ===============
 </script>
 
@@ -51,15 +59,19 @@ const handleSignIn = () => {
     <!-- Top bar: mobile-only brand + notification/search (destinations not designed yet), plus the
     same language switcher and account/logout menu as AdminLayout's header, on both desktop and mobile -->
     <q-header elevated class="bg-white text-grey-8">
-      <q-toolbar>
-        <template v-if="!isDesktop">
-          <img :src="logoO" alt="" class="user-layout__brand-logo" />
-          <q-toolbar-title class="user-layout__brand">{{ t('common.app.name') }}</q-toolbar-title>
-          <q-btn flat round icon="notifications" />
-          <q-btn flat round icon="search" />
-        </template>
+      <q-toolbar class="user-layout__toolbar">
+        <img :src="logoO" alt="" class="user-layout__brand-logo" @click="handleLogoClick" />
 
         <q-space />
+
+        <!-- Search box: absolutely centered on the toolbar so the language/account controls on the
+        right (which are wider than the empty left side) don't pull it off-center -->
+        <q-input v-model="searchQuery" dense outlined rounded bg-color="white"
+          :placeholder="t('userLayout.label.searchPlaceholder')" class="user-layout__search">
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
 
         <!-- Language switcher: shows the currently active locale's flag + name, click to open the picker -->
         <q-btn flat no-caps class="tw:mr-4!">
@@ -118,10 +130,23 @@ const handleSignIn = () => {
   width: 24px;
   height: 24px;
   margin-right: 8px;
+  cursor: pointer;
 }
 
 .user-layout__sign-in {
   padding: 0 18px;
   font-weight: 600;
+}
+
+.user-layout__toolbar {
+  position: relative;
+}
+
+.user-layout__search {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
 }
 </style>

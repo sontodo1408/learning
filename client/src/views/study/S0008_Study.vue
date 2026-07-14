@@ -1,9 +1,10 @@
 <script setup>
-import { reactive, computed, provide } from 'vue';
+import { reactive, computed, provide, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { ROUTER_NAME, STUDY_HEADER_KEY } from '@/helpers/const';
+import { ROUTER_NAME, STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
+import studyService from '@/services/study-service';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -26,9 +27,13 @@ const modeTabs = computed(() => [
 ]);
 
 // 2) =============== VARIABLE REF     ===============
-/** Study set title/tags/progress, rendered here but filled in by whichever mode is active */
+/** Study set title/tags/progress, rendered here but percent is filled in by whichever mode is active */
 const studyHeader = reactive({ title: '', tags: [], percent: 0 });
 provide(STUDY_HEADER_KEY, studyHeader);
+
+/** Study set (with its studyCards) fetched from the API, shared with whichever mode screen is active */
+const studySet = reactive({ id: null, title: '', description: '', studyCards: [] });
+provide(STUDY_SET_KEY, studySet);
 
 // 3) =============== METHOD/FUNCTION  ===============
 /** Switch study mode, keeping the current study set in the route */
@@ -37,6 +42,11 @@ const goToTab = (tab) => {
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
+onMounted(async () => {
+  const data = await studyService.getStudySet(route.params.setId);
+  Object.assign(studySet, data);
+  studyHeader.title = data.title;
+});
 </script>
 
 <template>
@@ -80,7 +90,7 @@ const goToTab = (tab) => {
         </q-list>
       </div>
 
-      <div class="study-page__main">
+      <div class="study-page__main tw:px-5">
         <div class="study-header tw:pt-4">
           <h1 class="study-header__title">{{ studyHeader.title }}</h1>
           <div v-if="studyHeader.tags.length" class="study-header__tags">
@@ -88,6 +98,8 @@ const goToTab = (tab) => {
               {{ tag }}
             </q-chip>
           </div>
+
+          <div v-if="studySet.description" class="study-header__description">{{ studySet.description }}</div>
 
           <div class="study-progress-bar">
             <div class="study-progress-bar__fill" :style="{ width: `${studyHeader.percent}%` }"></div>
@@ -177,8 +189,6 @@ const goToTab = (tab) => {
     line-height: 1.3;
     font-weight: 700;
     color: #3a2a22;
-    // Always exactly 2 lines tall, regardless of how short/long the title is; overflow truncates with "..."
-    height: calc(1.3em * 2);
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -190,6 +200,12 @@ const goToTab = (tab) => {
     display: flex;
     gap: 6px;
     margin-bottom: 16px;
+  }
+
+  &__description {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: rgba(#3a2a22, 0.6);
   }
 }
 

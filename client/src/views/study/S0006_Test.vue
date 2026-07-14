@@ -1,64 +1,59 @@
 <script setup>
-import { ref, reactive, computed, inject, watchEffect, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, inject, watch, watchEffect, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import dialog from '@/utilities/dialog';
-import { STUDY_HEADER_KEY } from '@/helpers/const';
+import { STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
 const studyHeader = inject(STUDY_HEADER_KEY);
+const studySet = inject(STUDY_SET_KEY);
 
-// Mock time limit for the test (no API/DB yet — see docs/04_Screen_Design/04_Test_Mode.md)
-const INITIAL_SECONDS = 30 * 60;
-
-/** Mock questions for the test */
-const QUESTIONS = [
-  {
-    id: 1,
-    type: 'multiple_choice',
-    category: 'Cellular Biology',
-    points: 1,
-    text: 'Which organelle is responsible for producing energy (ATP) in a cell?',
-    choices: ['Mitochondria', 'Nucleus', 'Ribosome', 'Golgi apparatus'],
-  },
-  {
-    id: 2,
-    type: 'true_false',
-    category: 'Cellular Biology',
-    points: 1,
-    text: "The nucleus contains the cell's genetic material (DNA).",
-  },
-  {
-    id: 3,
-    type: 'multiple_choice',
-    category: 'Anatomy',
-    points: 1,
-    text: 'Which structure controls what enters and exits the cell?',
-    choices: ['Cell wall', 'Cell membrane', 'Cytoskeleton', 'Nuclear envelope'],
-  },
-  {
-    id: 4,
-    type: 'true_false',
-    category: 'Anatomy',
-    points: 1,
-    text: 'Ribosomes are the site of protein synthesis within a cell.',
-  },
-];
+// Time budget per question (no API/DB yet — see docs/04_Screen_Design/04_Test_Mode.md); the
+// test's total time limit is this many seconds times the study set's question count
+const SECONDS_PER_QUESTION = 30;
+// Points awarded per question and number of distractor terms shown alongside the correct one
+const POINTS_PER_QUESTION = 1;
+const DISTRACTOR_COUNT = 3;
 
 // 2) =============== VARIABLE REF     ===============
 /** Map of question id -> the value the learner picked for it */
 const answers = reactive({});
-/** Seconds left before the (currently undesigned) time-up behavior would kick in */
-const remainingSeconds = ref(INITIAL_SECONDS);
+/** Seconds left before the (currently undesigned) time-up behavior would kick in; set once the
+ * study set has loaded (see the watch below), 0 until then */
+const remainingSeconds = ref(0);
 /** Whether the test is currently being submitted */
 const isSubmitting = ref(false);
 /** Interval id for the countdown timer, cleared on unmount */
 let timerId = null;
 
+/** One multiple-choice question per study card: its definition as the prompt, its term as the
+ * correct choice, plus up to DISTRACTOR_COUNT random terms from the other cards in the set */
+const questions = computed(() => studySet.studyCards.map((card) => {
+  const distractors = studySet.studyCards
+    .filter((other) => other.id !== card.id)
+    .map((other) => other.term)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, DISTRACTOR_COUNT);
+  return {
+    id: card.id,
+    category: studySet.title,
+    points: POINTS_PER_QUESTION,
+    text: card.definition,
+    choices: [card.term, ...distractors].sort(() => Math.random() - 0.5),
+    answer: card.term,
+  };
+}));
+
 /** Number of questions answered so far */
 const answeredCount = computed(() => Object.keys(answers).length);
-/** Progress fill percentage for the progress bar */
-const progressPercent = computed(() => Math.round((answeredCount.value / QUESTIONS.length) * 100));
+/** Number of questions answered correctly so far */
+const correctCount = computed(() => questions.value.filter((question) => answers[question.id] === question.answer).length);
+/** Progress fill percentage for the progress bar; 0% while the study set hasn't loaded yet */
+const progressPercent = computed(() => {
+  if (!questions.value.length) { return 0; }
+  return Math.round((answeredCount.value / questions.value.length) * 100);
+});
 /** Remaining time formatted as MM:SS */
 const formattedTime = computed(() => {
   const minutes = String(Math.floor(remainingSeconds.value / 60)).padStart(2, '0');
@@ -70,10 +65,11 @@ const formattedTime = computed(() => {
 /** Record the learner's answer for one question */
 const selectAnswer = (questionId, value) => { answers[questionId] = value; };
 
-/** Submit the test; no scoring backend yet, so just acknowledge the submission */
+/** Submit the test; no scoring backend yet, so just show the correct-count scored locally */
 const handleSubmitTest = async () => {
   isSubmitting.value = true;
-  await dialog.showMessage(t('common.dialog.notice'), t('S0006.label.submitted'));
+  await dialog.showMessage(t('common.dialog.notice'),
+    t('S0006.label.submitted', { correct: correctCount.value, total: questions.value.length }));
   isSubmitting.value = false;
 };
 
@@ -82,11 +78,13 @@ onMounted(() => {
   timerId = setInterval(() => {
     if (remainingSeconds.value > 0) { remainingSeconds.value -= 1; }
   }, 1000);
-  studyHeader.title = 'Biology 101 Midterm';
-  studyHeader.tags = [];
 });
 
 onBeforeUnmount(() => { clearInterval(timerId); });
+
+// Set (or reset, if the study set changes) the time limit once the question count is known:
+// SECONDS_PER_QUESTION per question, e.g. 2 questions -> 1 minute
+watch(() => questions.value.length, (length) => { remainingSeconds.value = length * SECONDS_PER_QUESTION; }, { immediate: true });
 
 // Keep the shared header's progress bar in sync with this screen's own progress
 watchEffect(() => { studyHeader.percent = progressPercent.value; });
@@ -102,36 +100,23 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
     </div>
 
     <div class="test-page__progress-text">
-      {{ t('S0006.label.questionProgress', { current: answeredCount, total: QUESTIONS.length }) }}
+      {{ t('S0006.label.questionProgress', { current: answeredCount, total: questions.length }) }}
       · {{ t('S0006.label.completed', { percent: progressPercent }) }}
     </div>
 
-    <div v-for="(question, index) in QUESTIONS" :key="question.id" class="test-question">
+    <div v-for="(question, index) in questions" :key="question.id" class="test-question">
       <div class="test-question__tags">
-        <q-chip dense square color="lime-5" text-color="lime-1">
-          {{ question.type === 'multiple_choice' ? t('S0006.label.multipleChoice') : t('S0006.label.trueFalse') }}
-        </q-chip>
-        <q-chip dense square outline color="grey-6">{{ question.category }}</q-chip>
-        <q-chip dense square outline color="grey-6">{{ t('S0006.label.points', { points: question.points }) }}</q-chip>
+        <q-chip dense square outline color="lime-1">{{ question.category }}</q-chip>
+        <q-chip dense square outline color="lime-1">{{ t('S0006.label.points', { points: question.points }) }}</q-chip>
       </div>
 
       <div class="test-question__text">{{ index + 1 }}. {{ question.text }}</div>
 
-      <div v-if="question.type === 'multiple_choice'" class="test-question__choices">
+      <div class="test-question__choices">
         <button v-for="choice in question.choices" :key="choice" type="button" class="test-choice"
-          :class="{ 'test-choice--selected': answers[question.id] === choice }" @click="selectAnswer(question.id, choice)">
+          :class="{ 'test-choice--selected': answers[question.id] === choice }"
+          @click="selectAnswer(question.id, choice)">
           {{ choice }}
-        </button>
-      </div>
-
-      <div v-else class="test-question__choices test-question__choices--two-col">
-        <button type="button" class="test-choice" :class="{ 'test-choice--selected': answers[question.id] === true }"
-          @click="selectAnswer(question.id, true)">
-          {{ t('S0006.label.true') }}
-        </button>
-        <button type="button" class="test-choice" :class="{ 'test-choice--selected': answers[question.id] === false }"
-          @click="selectAnswer(question.id, false)">
-          {{ t('S0006.label.false') }}
         </button>
       </div>
     </div>
