@@ -57,8 +57,19 @@ const router = createRouter({
       children: [
         {
           path: "",
-          name: ROUTER_NAME.USER_HOME,
-          component: () => import("@/views/S0007_UserHome.vue"),
+          component: () => import("@/views/user/S0007_UserHome.vue"),
+          children: [
+            {
+              path: "",
+              name: ROUTER_NAME.USER_HOME,
+              component: () => import("@/views/user/S0009_Dashboard.vue"),
+            },
+            {
+              path: "search",
+              name: ROUTER_NAME.USER_SEARCH,
+              component: () => import("@/views/user/S0010_Search.vue"),
+            },
+          ],
         },
       ],
     },

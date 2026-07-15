@@ -110,10 +110,6 @@ export default {
       newStudySet: 'New study set',
       settings: 'Settings',
       help: 'Help',
-      dailyVocabTitle: 'Daily English Vocabulary',
-      dailyVocabSubtitle: 'Learn a little English every day',
-      recentTitle: 'Recently visited',
-      recentSubtitle: 'Pick up right where you left off',
     },
   },
   S0008: {
@@ -124,6 +120,20 @@ export default {
       newStudySet: 'New Study Set',
       settings: 'Settings',
       help: 'Help',
+    },
+  },
+  S0009: {
+    label: {
+      dailyVocabTitle: 'Daily English Vocabulary',
+      dailyVocabSubtitle: 'Learn a little English every day',
+      recentTitle: 'Recently visited',
+      recentSubtitle: 'Pick up right where you left off',
+    },
+  },
+  S0010: {
+    label: {
+      title: 'Search results for "{keyword}"',
+      noResults: 'No matching study sets found',
     },
   },
 };

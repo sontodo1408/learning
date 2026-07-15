@@ -52,39 +52,36 @@ public class ImageStorageServiceImpl implements ImageStorageService {
     }
 
     @Override
-    public String store(MultipartFile file) {
+    public String store(MultipartFile file, String subDirectory) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(Message.IMAGE_UPLOAD_FAIL);
+        }
+
+        Path targetDirectory = storageDirectory.resolve(subDirectory).normalize();
+        try {
+            Files.createDirectories(targetDirectory);
+        } catch (IOException e) {
+            throw new BusinessException(Message.IMAGE_UPLOAD_FAIL, e);
         }
 
         // Generated name avoids collisions and path-traversal from the client-supplied filename.
         String filename = UUID.randomUUID().toString().replace("-", "") + extractExtension(file.getOriginalFilename());
         try {
-            file.transferTo(storageDirectory.resolve(filename));
+            file.transferTo(targetDirectory.resolve(filename));
         } catch (IOException e) {
             throw new BusinessException(Message.IMAGE_UPLOAD_FAIL, e);
         }
 
-        return filename;
+        return subDirectory + "/" + filename;
     }
 
     @Override
-    public String toPublicUrl(String storedFilename) {
-        // Anything that already looks like a path/URL (external image, or already-converted
-        // value) is left untouched — only a bare filename gets prefixed.
-        if (storedFilename == null || storedFilename.isBlank() || storedFilename.contains("/")) {
-            return storedFilename;
-        }
-        return Constant.IMAGE_URL_PREFIX + "/" + storedFilename;
-    }
-
-    @Override
-    public String toStoredPath(String publicUrl) {
+    public String toStoredPath(String clientValue) {
         String prefix = Constant.IMAGE_URL_PREFIX + "/";
-        if (publicUrl == null || !publicUrl.startsWith(prefix)) {
-            return publicUrl;
+        if (clientValue == null || !clientValue.startsWith(prefix)) {
+            return clientValue;
         }
-        return publicUrl.substring(prefix.length());
+        return clientValue.substring(prefix.length());
     }
 
     @Override

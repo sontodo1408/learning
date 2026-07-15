@@ -1,17 +1,21 @@
 import { toRaw } from 'vue';
 
-// Origin (scheme + host + port) of the API, derived from VITE_API_URL, e.g. "http://localhost:8080".
-// The server serves uploaded images at this origin's root (e.g. "/imgs/xxx.png"), not under "/api/v1".
-const API_ORIGIN = new URL(import.meta.env.VITE_API_URL).origin;
+// Base URL images are served under, e.g. "http://localhost:8080/api/v1/imgs/". The server returns
+// image paths as bare "<subdirectory>/<name>.<extension>" (e.g. "study/abc.png"), relative to this.
+const IMAGE_BASE_URL = new URL('imgs/', import.meta.env.VITE_API_URL).toString();
+
+/** Matches an already-absolute URL (http/https/blob/data) that should be used as-is. */
+const ABSOLUTE_URL_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
 
 /**
- * Resolves a server-relative image path (e.g. "/imgs/xxx.png") into an absolute URL usable as an
- * <img> src. Anything that isn't a server-relative path (already-absolute URL, blob: preview, null) is
+ * Resolves a server-relative image path (e.g. "study/abc.png") into an absolute URL usable as an
+ * <img> src. Anything that's already absolute (full URL, blob: preview, data: URI) or null/empty is
  * passed through unchanged.
  */
 export const resolveImageUrl = (path) => {
-  if (!path?.startsWith('/')) { return path ?? null; }
-  return `${API_ORIGIN}${path}`;
+  if (!path) { return null; }
+  if (ABSOLUTE_URL_PATTERN.test(path)) { return path; }
+  return `${IMAGE_BASE_URL}${path}`;
 };
 
 export const clone = (item, defaultValue = null) => {

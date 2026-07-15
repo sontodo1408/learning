@@ -8,6 +8,7 @@ export const DIALOG_BTN = {
 export const ROUTER_NAME = {
   LOGIN: "login",
   USER_HOME: "user-home",
+  USER_SEARCH: "user-search",
   HOME: "home",
   VIDEO_VOCAB: "video-vocab",
   FLASHCARD: "flashcard",

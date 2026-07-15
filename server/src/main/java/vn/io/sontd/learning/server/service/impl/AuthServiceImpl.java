@@ -8,7 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.io.sontd.learning.server.config.security.UserDetailsImpl;
@@ -22,6 +21,7 @@ import vn.io.sontd.learning.server.request.auth.GoogleLoginRequest;
 import vn.io.sontd.learning.server.request.auth.LoginRequest;
 import vn.io.sontd.learning.server.response.auth.LoginResponse;
 import vn.io.sontd.learning.server.service.AuthService;
+import vn.io.sontd.learning.server.service.BaseService;
 import vn.io.sontd.learning.server.service.JwtService;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class AuthServiceImpl extends BaseService implements AuthService {
     /** Column width limits from {@code db/create.sql}, enforced here to avoid a data-truncation error on save. */
     private static final int USERNAME_MAX_LENGTH = 50;
     private static final int FULL_NAME_MAX_LENGTH = 25;
@@ -133,8 +133,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public LoginResponse checkLogin() {
-        String username = ((UserDetailsImpl) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal()).getUsername();
+        String username = getAuth().map(UserDetailsImpl::getUsername).orElseThrow();
 
         return toResponse(null, findUser(username));
     }

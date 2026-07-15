@@ -2,6 +2,7 @@
 import { ref, computed, inject, watchEffect, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
+import { resolveImageUrl } from '@/utilities/common';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
@@ -16,6 +17,8 @@ const isFlipped = ref(false);
 
 /** The card currently shown */
 const currentCard = computed(() => studySet.studyCards[currentIndex.value]);
+/** Absolute URL of the current card's image, if it has one */
+const currentCardImage = computed(() => resolveImageUrl(currentCard.value?.imgUrl));
 /** Whether the first card is showing (Prev is a no-op) */
 const isFirstCard = computed(() => currentIndex.value === 0);
 /** Whether the last card is showing (Next is a no-op) */
@@ -69,6 +72,7 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
       <div class="flashcard" @click="handleFlipCard">
         <div class="flashcard__inner" :class="{ 'flashcard__inner--flipped': isFlipped }">
           <div class="flashcard__face flashcard__face--front">
+            <img v-if="currentCardImage" :src="currentCardImage" alt="" class="flashcard__image" />
             <div class="flashcard__term">{{ currentCard.term }}</div>
             <div v-if="currentCard.pronounceTerm" class="flashcard__pronounce">{{ currentCard.pronounceTerm }}</div>
             <div class="flashcard__hint">{{ t('S0004.label.tapToReveal') }}</div>
@@ -106,7 +110,7 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
 
 .flashcard {
   perspective: 1200px;
-  height: 280px;
+  height: 380px;
   cursor: pointer;
   margin-bottom: 20px;
 
@@ -150,6 +154,14 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
     font-size: 28px;
     font-weight: 700;
     color: #3a2a22;
+  }
+
+  &__image {
+    width: 192px;
+    height: 192px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 16px;
   }
 
   &__hint {
