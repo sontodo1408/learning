@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
 import { LOCALE_OPTIONS, setLocale } from '@/i18n';
 import { useAuthStore } from '@/stores/auth-store';
@@ -12,6 +12,7 @@ import logoO from '@/assets/imgs/logo_o.png';
 // 1) =============== INITIALIZATION   ===============
 const { t, locale } = useI18n();
 const $q = useQuasar();
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -41,9 +42,18 @@ const handleLogout = () => {
   router.push({ name: ROUTER_NAME.LOGIN });
 };
 
-/** Send a signed-out visitor to the login screen */
+/** Send a signed-out visitor to the login screen, carrying the current page along so login can return here */
 const handleSignIn = () => {
-  router.push({ name: ROUTER_NAME.LOGIN });
+  router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+};
+
+/** Enter in the header search box: go to the search screen with the trimmed keyword */
+const handleSearch = () => {
+  const keyword = searchQuery.value.trim();
+  if (!keyword) {
+    return;
+  }
+  router.push({ name: ROUTER_NAME.USER_SEARCH, query: { keyword } });
 };
 
 /** Go back to the home screen ("/") when the header logo is clicked */
@@ -67,7 +77,7 @@ const handleLogoClick = () => {
         <!-- Search box: absolutely centered on the toolbar so the language/account controls on the
         right (which are wider than the empty left side) don't pull it off-center -->
         <q-input v-model="searchQuery" dense outlined rounded bg-color="white"
-          :placeholder="t('userLayout.label.searchPlaceholder')" class="user-layout__search">
+          :placeholder="t('userLayout.label.searchPlaceholder')" class="user-layout__search" @keyup.enter="handleSearch">
           <template #prepend>
             <q-icon name="search" />
           </template>

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class Constant {
     // SECURITY
     /** URL patterns that bypass JWT authentication entirely (see JwtAuthenticationFilter). */
-    public static final String[] INTERNAL_PERMIT_ALL = {"/api/v1/auth/login", "/api/v1/auth/google-login", "/api/v1/study-sets/**", "/api/v1/home/recent-study-sets", "/api/v1/home/newest-study-sets", "/api/v1/imgs/**", "/test/**"};
+    public static final String[] INTERNAL_PERMIT_ALL = {"/api/v1/auth/login", "/api/v1/auth/google-login", "/api/v1/study-sets/**", "/api/v1/home/**", "/api/v1/imgs/**", "/test/**"};
     /** JWT claim name used to carry the user's DB-encoded password. */
     public static final String PASSWORD_CLAIM = "password_claim";
 
@@ -31,6 +31,8 @@ public class Constant {
      * resource handler (WebConfig) and the permit-all list above ({@code /api/v1/imgs/**}).
      */
     public static final String IMAGE_URL_PREFIX = "/api/v1/imgs";
+    /** Subdirectory (relative to the image base dir) that study card images are stored under. */
+    public static final String STUDY_CARD_IMAGE_SUBDIRECTORY = "study";
 
     // STUDY SET
     /**

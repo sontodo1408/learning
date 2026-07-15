@@ -21,6 +21,16 @@ public interface StudySetService {
     List<StudySetDTO> findByTitleContaining(String title);
 
     /**
+     * Searches study sets whose title/description contains the given keyword, or that own at
+     * least one study card whose term/definition contains it (all case-insensitive), each with
+     * its study cards attached.
+     *
+     * @param keyword the substring to search for
+     * @return matching study sets, as frontend-facing DTOs
+     */
+    List<StudySetDTO> search(String keyword);
+
+    /**
      * Finds a study set by id, together with its study cards.
      *
      * @param studySetId the study set's id

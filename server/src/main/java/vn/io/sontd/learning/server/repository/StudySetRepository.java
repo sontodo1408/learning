@@ -2,6 +2,8 @@ package vn.io.sontd.learning.server.repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.io.sontd.learning.server.entity.StudySetEntity;
 
@@ -37,4 +39,24 @@ public interface StudySetRepository extends JpaRepository<StudySetEntity, Long> 
      * @return the number of matching study sets
      */
     long countByTitleContaining(String title);
+
+    /**
+     * Finds every study set whose {@code title}/{@code description} contains the given keyword,
+     * or that owns at least one study card whose {@code term}/{@code definition} contains it
+     * (all case-insensitive).
+     *
+     * @param keyword the substring to search for
+     * @return matching study sets, in no particular order
+     */
+    @Query("""
+            SELECT ss FROM StudySetEntity ss
+            WHERE LOWER(ss.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(ss.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR ss.id IN (
+                   SELECT sc.studySetId FROM StudyCardEntity sc
+                   WHERE LOWER(sc.term) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      OR LOWER(sc.definition) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               )
+            """)
+    List<StudySetEntity> searchByKeyword(@Param("keyword") String keyword);
 }

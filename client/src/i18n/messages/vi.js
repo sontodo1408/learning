@@ -110,10 +110,6 @@ export default {
       newStudySet: 'Học phần mới',
       settings: 'Cài đặt',
       help: 'Trợ giúp',
-      dailyVocabTitle: 'Daily English Vocabulary',
-      dailyVocabSubtitle: 'Học từ vựng tiếng Anh mỗi ngày',
-      recentTitle: 'Đã học gần đây',
-      recentSubtitle: 'Tiếp tục từ nơi bạn đã dừng lại',
     },
   },
   S0008: {
@@ -124,6 +120,20 @@ export default {
       newStudySet: 'Học phần mới',
       settings: 'Cài đặt',
       help: 'Trợ giúp',
+    },
+  },
+  S0009: {
+    label: {
+      dailyVocabTitle: 'Daily English Vocabulary',
+      dailyVocabSubtitle: 'Học từ vựng tiếng Anh mỗi ngày',
+      recentTitle: 'Đã học gần đây',
+      recentSubtitle: 'Tiếp tục từ nơi bạn đã dừng lại',
+    },
+  },
+  S0010: {
+    label: {
+      title: 'Kết quả tìm kiếm cho "{keyword}"',
+      noResults: 'Không tìm thấy học phần nào phù hợp',
     },
   },
 };

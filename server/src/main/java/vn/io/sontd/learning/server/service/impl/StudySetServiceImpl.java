@@ -54,6 +54,21 @@ public class StudySetServiceImpl implements StudySetService {
     }
 
     @Override
+    public List<StudySetDTO> search(String keyword) {
+        List<StudySetEntity> studySets = studySetRepository.searchByKeyword(keyword);
+        List<Long> studySetIds = studySets.stream().map(StudySetEntity::getId).toList();
+
+        Map<Long, List<StudyCardDTO>> cardsByStudySetId = studyCardRepository.findByStudySetIdInOrderByDisplayOrderAsc(studySetIds)
+                .stream()
+                .map(this::toCardDTO)
+                .collect(Collectors.groupingBy(StudyCardDTO::getStudySetId));
+
+        return studySets.stream()
+                .map(studySet -> toSetDTO(studySet, cardsByStudySetId.getOrDefault(studySet.getId(), List.of())))
+                .toList();
+    }
+
+    @Override
     public StudySetDTO findById(Long studySetId) {
         StudySetEntity studySet = studySetRepository.findById(studySetId)
                 .orElseThrow(() -> new BusinessException(Message.STUDY_SET_NOT_FOUND));
@@ -188,7 +203,7 @@ public class StudySetServiceImpl implements StudySetService {
             if (files == null || fileIndex < 0 || fileIndex >= files.size()) {
                 throw new BusinessException(Message.IMAGE_FILE_INDEX_INVALID);
             }
-            card.setImgUrl(imageStorageService.store(files.get(fileIndex)));
+            card.setImgUrl(imageStorageService.store(files.get(fileIndex), Constant.STUDY_CARD_IMAGE_SUBDIRECTORY));
         }
     }
 
@@ -214,7 +229,7 @@ public class StudySetServiceImpl implements StudySetService {
 
     private StudyCardDTO toCardDTO(StudyCardEntity card) {
         return new StudyCardDTO(card.getId(), card.getStudySetId(), card.getTerm(), card.getDefinition(),
-                card.getPronounceTerm(), card.getPronounceDef(), imageStorageService.toPublicUrl(card.getImgUrl()),
+                card.getPronounceTerm(), card.getPronounceDef(), card.getImgUrl(),
                 card.getDisplayOrder(), card.getCreatedAt(), card.getUpdatedAt());
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import vn.io.sontd.learning.server.constant.Constant;
 import vn.io.sontd.learning.server.service.JwtService;
@@ -28,6 +29,9 @@ import java.util.Arrays;
  */
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    /** Matches {@link Constant#INTERNAL_PERMIT_ALL} entries the same way {@code requestMatchers} does, incl. {@code /**} wildcards. */
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
@@ -44,17 +48,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authToken = jwtService.getAuthToken(request);
-        String urlPath = request.getRequestURI();
-        boolean urlCheck = Arrays.stream(Constant.INTERNAL_PERMIT_ALL).parallel() //
-                .anyMatch(urlPath::equals);
 
-        // Skip authentication entirely when there is no token or the URL is publicly permitted
-        if (StringUtils.isBlank(authToken) || urlCheck) {
+        // No token at all → proceed anonymously; permit-all URLs allow this, and
+        // authenticated ones will be rejected downstream by the authorization rules.
+        if (StringUtils.isBlank(authToken)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         if (!jwtService.validateJwtToken(authToken)) {
+            String urlPath = request.getRequestURI();
+            boolean urlIsPublic = Arrays.stream(Constant.INTERNAL_PERMIT_ALL) //
+                    .anyMatch(pattern -> PATH_MATCHER.match(pattern, urlPath));
+
+            // On a permit-all URL, an invalid/expired token doesn't fail the request —
+            // it's simply treated the same as no token (anonymous) instead of rejected.
+            if (urlIsPublic) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             throw new BadCredentialsException("Invalid API Key");
         }
 
