@@ -89,6 +89,13 @@ export default class RestClient {
           // Prefer the server's own error envelope when available, otherwise pass the raw error along
           const errorData = axios.isAxiosError(error) ? error.response?.data : null;
           notifyIfHasMessage(errorData);
+
+          // The token was rejected at the HTTP level (e.g. expired JWT returned as a bare 401
+          // status rather than a 200 + { code: 401 } envelope): clear the session here too
+          if (error.response?.status === 401) {
+            useAuthStore().signOut();
+          }
+
           reject(errorData ?? error);
         })
         .finally(() => appStore.setLoading(false));
