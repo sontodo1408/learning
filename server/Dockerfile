@@ -16,7 +16,7 @@ COPY src ./src
 # COPY mvnw .
 
 # Build
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dbuild.profile=production
 
 # ===== Stage 2: Run =====
 FROM eclipse-temurin:21-jre
