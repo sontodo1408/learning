@@ -218,6 +218,7 @@ public class StudySetServiceImpl implements StudySetService {
         // path (already bare, a no-op) or an existing image's public URL echoed back by the
         // client on an update — either way the DB always holds the version-independent form.
         card.setImgUrl(imageStorageService.toStoredPath(request.getImgUrl()));
+        card.setWordType(request.getWordType());
         card.setDisplayOrder(CommonUtils.toInt(request.getDisplayOrder(), 0));
         return card;
     }
@@ -229,7 +230,7 @@ public class StudySetServiceImpl implements StudySetService {
 
     private StudyCardDTO toCardDTO(StudyCardEntity card) {
         return new StudyCardDTO(card.getId(), card.getStudySetId(), card.getTerm(), card.getDefinition(),
-                card.getPronounceTerm(), card.getPronounceDef(), card.getImgUrl(),
+                card.getPronounceTerm(), card.getPronounceDef(), card.getImgUrl(), card.getWordType(),
                 card.getDisplayOrder(), card.getCreatedAt(), card.getUpdatedAt());
     }
 }

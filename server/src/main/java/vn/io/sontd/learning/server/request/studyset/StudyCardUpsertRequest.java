@@ -19,6 +19,7 @@ public class StudyCardUpsertRequest {
     private String pronounceTerm;
     private String pronounceDef;
     private String imgUrl;
+    private Integer wordType;
     private Integer displayOrder;
 
     /**

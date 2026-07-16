@@ -40,6 +40,7 @@ CREATE TABLE study_cards (
     pronounce_term              VARCHAR(50),
     pronounce_def               VARCHAR(50),
     img_url                     VARCHAR(255)    DEFAULT NULL,
+    word_type                   TINYINT         DEFAULT NULL, -- Part of speech: 0=NOUN, 1=VERB, 2=ADJECTIVE, 3=ADVERB, 4=PRONOUN, 5=PREPOSITION, 6=CONJUNCTION, 7=INTERJECTION
     display_order               INT             NOT NULL DEFAULT 0, -- Used to order how cards are displayed within a set
     created_at                  DATETIME,
     updated_at                  DATETIME

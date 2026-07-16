@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import Sortable from 'sortablejs';
 import { v4 as uuid } from 'uuid';
 import dialog from '@/utilities/dialog';
-import { DIALOG_BTN } from '@/helpers/const';
+import { DIALOG_BTN, WORD_TYPE, WORD_TYPE_LABEL_KEY } from '@/helpers/const';
 import { resolveImageUrl } from '@/utilities/common';
 import { useAuthStore } from '@/stores/auth-store';
 import videoVocabService from '@/services/video-vocab-service';
@@ -19,8 +19,14 @@ const authStore = useAuthStore();
 /** Create a fresh, empty vocab card. `uid` is the client-side key; `id` is reserved for the server-side id (set later) */
 // `pronounceDef` will be saved to the server's `pronounce_def` field
 const newCard = () => ({
-  uid: uuid(), id: null, term: '', pronounceDef: '', definition: '', imgUrl: null, image: null, imageFile: null,
+  uid: uuid(), id: null, term: '', pronounceDef: '', definition: '', wordType: null, imgUrl: null, image: null, imageFile: null,
 });
+
+/** Options for the word type ("loại từ") select, labeled via i18n */
+const wordTypeOptions = computed(() => Object.values(WORD_TYPE).map((value) => ({
+  value,
+  label: t(WORD_TYPE_LABEL_KEY[value]),
+})));
 
 // Durations for the playback sequence: ringing alarm -> masked question w/ countdown -> revealed answer
 const ALARM_DURATION_MS = 3000;
@@ -95,6 +101,7 @@ const cardFromStudyCard = (studyCard) => ({
   term: studyCard.term ?? '',
   definition: studyCard.definition ?? '',
   pronounceDef: studyCard.pronounceDef ?? '',
+  wordType: studyCard.wordType ?? null,
   // Raw server-relative path, kept as-is to send back unchanged if the image isn't replaced
   imgUrl: studyCard.imgUrl ?? null,
   // Absolute URL for display/preview
@@ -133,6 +140,7 @@ const buildSaveRequest = () => {
       definition: card.definition,
       pronounceTerm: '',
       pronounceDef: card.pronounceDef,
+      wordType: card.wordType,
       // Kept as-is when the image isn't replaced; the server overwrites it once it stores the
       // file at imageFileIndex, and it's already null when the card has no image at all.
       imgUrl: card.imgUrl,
@@ -176,6 +184,10 @@ const confirmSaveStudySet = async () => {
 // --- Playback: ringing alarm -> masked question w/ countdown -> revealed answer -> next card ---
 /** The card currently shown by the playback sequence */
 const currentPlayCard = computed(() => cards.value[playIndex.value] ?? null);
+/** Localized label of the current card's word type, if it has one */
+const currentPlayCardWordType = computed(
+  () => wordTypeOptions.value.find((option) => option.value === currentPlayCard.value?.wordType)?.label ?? null,
+);
 
 /** Shared AudioContext, created lazily since it needs a user gesture to start */
 let audioCtx = null;
@@ -341,39 +353,56 @@ onBeforeUnmount(() => {
       </div>
 
       <div ref="listRef">
-        <div v-for="card in cards" :key="card.uid"
-          class="tw:flex tw:items-center tw:border tw:border-gray-200 tw:rounded-lg tw:bg-white tw:mb-3">
-          <q-icon name="drag_indicator" size="20px" class="drag-handle tw:cursor-move tw:mx-2 tw:text-gray-400" />
+        <div v-for="card in cards" :key="card.uid" class="card-row tw:flex tw:items-stretch tw:border tw:border-gray-200
+          tw:rounded-lg tw:bg-white tw:mb-3 tw:transition-shadow">
+          <q-icon name="drag_indicator" size="20px"
+            class="drag-handle tw:self-center tw:cursor-move tw:mx-2 tw:text-gray-400" />
 
-          <div class="tw:flex-1 tw:p-4">
-            <q-input v-model="card.term" :placeholder="t('S0002.label.termPlaceholder')" borderless dense />
+          <div class="tw:flex-1 tw:min-w-0">
+            <div class="tw:flex tw:items-center">
+              <div class="tw:flex-1 tw:p-4">
+                <q-input v-model="card.term" :placeholder="t('S0002.label.termPlaceholder')" borderless dense />
+              </div>
+
+              <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
+                <q-input v-model="card.definition" :placeholder="t('S0002.label.definitionPlaceholder')" borderless
+                  dense />
+              </div>
+            </div>
+
+            <q-separator />
+
+            <div class="tw:flex tw:items-center">
+              <div class="tw:flex-1 tw:p-4">
+                <q-input v-model="card.pronounceDef" :placeholder="t('S0002.label.pronounceDefPlaceholder')" borderless
+                  dense />
+              </div>
+
+              <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
+                <CSelect v-model="card.wordType" :outlined="false" :options="wordTypeOptions" :option-label="['label']"
+                  option-value="value" display-value="label" :label="t('S0002.label.wordTypePlaceholder')" />
+              </div>
+            </div>
           </div>
 
-          <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
-            <q-input v-model="card.definition" :placeholder="t('S0002.label.definitionPlaceholder')" borderless dense />
-          </div>
-
-          <div class="tw:flex-1 tw:p-4 tw:border-l tw:border-gray-200">
-            <q-input v-model="card.pronounceDef" :placeholder="t('S0002.label.pronounceDefPlaceholder')" borderless
-              dense />
-          </div>
-
-          <div class="image-picker tw:relative tw:w-16 tw:h-16 tw:my-3 tw:mx-2 tw:shrink-0">
+          <div class="image-picker tw:w-35 tw:shrink-0 tw:p-3 tw:border-l tw:border-gray-200">
             <input type="file" accept="image/*" aria-label="Card image" class="tw:hidden"
               :ref="(el) => setFileInputRef(el, card.uid)" @change="onImageChange($event, card)" />
 
-            <div
-              class="tw:w-16 tw:h-16 tw:rounded-md tw:border tw:border-dashed tw:border-gray-300 tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:cursor-pointer tw:bg-gray-50"
-              @click="triggerFileInput(card.uid)">
-              <img v-if="card.image" :src="card.image" alt="Card" class="tw:w-full tw:h-full tw:object-cover" />
-              <q-icon v-else name="add_photo_alternate" size="24px" class="tw:text-gray-400" />
-            </div>
+            <div class="image-picker__frame tw:relative tw:w-full tw:h-full">
+              <div
+                class="tw:w-full tw:h-full tw:rounded-md tw:border tw:border-dashed tw:border-gray-300 tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:cursor-pointer tw:bg-gray-50 tw:transition-colors hover:tw:bg-gray-100"
+                @click="triggerFileInput(card.uid)">
+                <img v-if="card.image" :src="card.image" alt="Card" class="tw:w-full tw:h-full tw:object-cover" />
+                <q-icon v-else name="add_photo_alternate" size="32px" class="tw:text-gray-400" />
+              </div>
 
-            <CBtn v-if="card.image" round dense flat icon="close" size="8px" class="remove-image-btn tw:bg-white tw:shadow"
-              @click.stop="removeImage(card)" />
+              <CBtn v-if="card.image" round dense flat icon="close" size="8px"
+                class="remove-image-btn tw:bg-white tw:shadow" @click.stop="removeImage(card)" />
+            </div>
           </div>
 
-          <div class="tw:flex tw:items-center tw:px-3">
+          <div class="tw:flex tw:items-center tw:px-3 tw:border-l tw:border-gray-200">
             <CBtn round dense flat icon="delete_outline" color="grey-7" @click="removeCard(card.uid)" />
           </div>
         </div>
@@ -404,6 +433,7 @@ onBeforeUnmount(() => {
 
             <template v-else-if="playStage === 'question' || playStage === 'answer'">
               <div class="tw:text-white tw:text-3xl tw:font-semibold tw:text-center">{{ currentPlayCard?.term }}</div>
+              <div v-if="currentPlayCardWordType" class="word-type-badge">{{ currentPlayCardWordType }}</div>
 
               <img v-if="currentPlayCard?.image" :src="currentPlayCard.image" alt=""
                 class="tw:max-w-full tw:max-h-40 tw:rounded-md tw:object-cover" />
@@ -429,9 +459,25 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss" scoped>
+.card-row:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.word-type-badge {
+  margin-top: -8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 // Quasar's own q-btn CSS sets position:relative outside of Tailwind's layer, so it
 // always wins over the tw:absolute utility class — force the position here instead.
-.image-picker .remove-image-btn {
+.image-picker__frame .remove-image-btn {
   position: absolute !important;
   top: -8px;
   right: -8px;

@@ -34,6 +34,7 @@ const props = defineProps({
   disable: Boolean,
   optionDisable: String,
   errorMessage: String,
+  label: String,
 });
 const emits = defineEmits(['update:modelValue', 'change']);
 
@@ -167,7 +168,7 @@ onMounted(() => {
     <q-select :outlined="outlined" no-error-icon v-model="selectedValue" :options="optionFiltered"
       :display-value="displayText" :dense="dense" :multiple="multiple" :class="['select-component', selectClass]"
       @update:model-value="selectRowEvent" :disable="disable" :option-disable="optionDisable" :error="error"
-      :error-message="errorMessage" behavior="menu">
+      :error-message="errorMessage" :label="label" behavior="menu">
       <template v-slot:prepend>
         <slot name="prepend"></slot>
       </template>

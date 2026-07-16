@@ -26,6 +26,18 @@ export default {
       searchPlaceholder: 'Tìm kiếm học phần',
     },
   },
+  // Part of speech ("loại từ") labels for a study card's WORD_TYPE, shared across screens
+  // (S0002's editor select and S0004's flashcard display) rather than owned by one screen.
+  wordType: {
+    noun: 'Danh từ',
+    verb: 'Động từ',
+    adjective: 'Tính từ',
+    adverb: 'Trạng từ',
+    pronoun: 'Đại từ',
+    preposition: 'Giới từ',
+    conjunction: 'Liên từ',
+    interjection: 'Thán từ',
+  },
   S0001: {
     label: {
       title: 'Trang chủ',
@@ -51,6 +63,7 @@ export default {
       studySetCardCount: '{count} thẻ',
       saveSuccess: 'Đã lưu học phần thành công!',
       saveConfirm: 'Bạn có chắc chắn muốn lưu học phần này không?',
+      wordTypePlaceholder: 'Loại từ',
     },
   },
   S0003: {

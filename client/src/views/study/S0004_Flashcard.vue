@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, inject, watchEffect, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
+import { STUDY_HEADER_KEY, STUDY_SET_KEY, WORD_TYPE_LABEL_KEY } from '@/helpers/const';
 import { resolveImageUrl } from '@/utilities/common';
 
 // 1) =============== INITIALIZATION   ===============
@@ -19,6 +19,11 @@ const isFlipped = ref(false);
 const currentCard = computed(() => studySet.studyCards[currentIndex.value]);
 /** Absolute URL of the current card's image, if it has one */
 const currentCardImage = computed(() => resolveImageUrl(currentCard.value?.imgUrl));
+/** Localized word type ("loại từ") label of the current card, if it has one */
+const currentCardWordType = computed(() => {
+  const key = WORD_TYPE_LABEL_KEY[currentCard.value?.wordType];
+  return key ? t(key) : null;
+});
 /** Whether the first card is showing (Prev is a no-op) */
 const isFirstCard = computed(() => currentIndex.value === 0);
 /** Whether the last card is showing (Next is a no-op) */
@@ -73,7 +78,10 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
         <div class="flashcard__inner" :class="{ 'flashcard__inner--flipped': isFlipped }">
           <div class="flashcard__face flashcard__face--front">
             <img v-if="currentCardImage" :src="currentCardImage" alt="" class="flashcard__image" />
-            <div class="flashcard__term">{{ currentCard.term }}</div>
+            <div class="flashcard__term">
+              {{ currentCard.term }}
+              <span v-if="currentCardWordType" class="flashcard__word-type">({{ currentCardWordType }})</span>
+            </div>
             <div v-if="currentCard.pronounceTerm" class="flashcard__pronounce">{{ currentCard.pronounceTerm }}</div>
             <div class="flashcard__hint">{{ t('S0004.label.tapToReveal') }}</div>
           </div>
@@ -154,6 +162,13 @@ watchEffect(() => { studyHeader.percent = progressPercent.value; });
     font-size: 28px;
     font-weight: 700;
     color: #3a2a22;
+  }
+
+  &__word-type {
+    font-size: 16px;
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(#3a2a22, 0.5);
   }
 
   &__image {

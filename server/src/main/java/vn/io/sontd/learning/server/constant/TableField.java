@@ -50,6 +50,7 @@ public class TableField {
     public static final String PRONOUNCE_TERM = "pronounce_term";
     public static final String PRONOUNCE_DEF = "pronounce_def";
     public static final String IMG_URL = "img_url";
+    public static final String WORD_TYPE = "word_type";
     public static final String DISPLAY_ORDER = "display_order";
 
     // study_set_views table columns

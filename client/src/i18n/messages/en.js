@@ -26,6 +26,18 @@ export default {
       searchPlaceholder: 'Search study sets',
     },
   },
+  // Part of speech labels for a study card's WORD_TYPE, shared across screens
+  // (S0002's editor select and S0004's flashcard display) rather than owned by one screen.
+  wordType: {
+    noun: 'Noun',
+    verb: 'Verb',
+    adjective: 'Adjective',
+    adverb: 'Adverb',
+    pronoun: 'Pronoun',
+    preposition: 'Preposition',
+    conjunction: 'Conjunction',
+    interjection: 'Interjection',
+  },
   S0001: {
     label: {
       title: 'Home',
@@ -51,6 +63,7 @@ export default {
       studySetCardCount: '{count} cards',
       saveSuccess: 'Study set saved successfully!',
       saveConfirm: 'Are you sure you want to save this study set?',
+      wordTypePlaceholder: 'Word type',
     },
   },
   S0003: {

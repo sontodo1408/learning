@@ -21,6 +21,7 @@ public class StudyCardDTO {
     private String pronounceTerm;
     private String pronounceDef;
     private String imgUrl;
+    private Integer wordType;
     private Integer displayOrder;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

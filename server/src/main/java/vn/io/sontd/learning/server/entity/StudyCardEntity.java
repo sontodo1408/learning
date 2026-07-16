@@ -44,6 +44,10 @@ public class StudyCardEntity extends BaseEntity {
     @Column(name = TableField.IMG_URL)
     private String imgUrl;
 
+    /** Part of speech ("loại từ"); see {@code client}'s {@code WORD_TYPE} constant for the value mapping. */
+    @Column(name = TableField.WORD_TYPE)
+    private Integer wordType;
+
     /** Position of this card within its study set's card list. */
     @Column(name = TableField.DISPLAY_ORDER)
     private Integer displayOrder;
