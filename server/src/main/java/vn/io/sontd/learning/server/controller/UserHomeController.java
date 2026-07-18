@@ -34,6 +34,16 @@ public class UserHomeController extends BaseController {
     }
 
     /**
+     * Returns the study sets owned by the current user, each with its study cards, most
+     * recently created first. This endpoint is public: an anonymous caller (no valid bearer
+     * token) gets an empty list rather than a 401.
+     */
+    @GetMapping("/my-study-sets")
+    public ResponseRoot getMyStudySets() {
+        return success(new ResponseData<>(userHomeService.getMyStudySets()));
+    }
+
+    /**
      * Returns the most recently created study sets, each with its study cards.
      *
      * @param limit the maximum number of study sets to return; defaults to {@value DEFAULT_NEWEST_LIMIT} when omitted

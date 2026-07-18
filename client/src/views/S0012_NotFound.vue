@@ -14,15 +14,15 @@ const { t } = useI18n();
   <div class="page-404">
     <div class="container">
       <div class="image-box">
-        <h1>{{ t('S0011.label.code') }}</h1>
+        <h1>{{ t('S0012.label.code') }}</h1>
       </div>
 
       <div class="content">
-        <h2>{{ t('S0011.label.title') }}</h2>
-        <p>{{ t('S0011.label.description') }}</p>
+        <h2>{{ t('S0012.label.title') }}</h2>
+        <p>{{ t('S0012.label.description') }}</p>
 
         <RouterLink :to="{ name: ROUTER_NAME.USER_HOME }" class="home-btn">
-          {{ t('S0011.btn.goHome') }}
+          {{ t('S0012.btn.goHome') }}
         </RouterLink>
       </div>
     </div>

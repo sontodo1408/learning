@@ -150,6 +150,12 @@ export default {
     },
   },
   S0011: {
+    label: {
+      title: 'My study sets',
+      empty: "You don't have any study sets yet",
+    },
+  },
+  S0012: {
     btn: {
       goHome: 'Go to Home',
     },

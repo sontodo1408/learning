@@ -150,6 +150,12 @@ export default {
     },
   },
   S0011: {
+    label: {
+      title: 'Học phần của tôi',
+      empty: 'Bạn chưa có học phần nào',
+    },
+  },
+  S0012: {
     btn: {
       goHome: 'Về trang chủ',
     },

@@ -23,6 +23,12 @@ class HomeService extends BaseService {
     const result = await this.get('/search', { keyword });
     return result.payload.data;
   }
+
+  /** Fetch the current user's own study sets */
+  async getMyStudySets() {
+    const result = await this.get('/my-study-sets');
+    return result.payload.data;
+  }
 }
 
 export default new HomeService();

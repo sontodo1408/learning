@@ -37,4 +37,14 @@ public class UserHomeServiceImpl extends BaseService implements UserHomeService 
 
         return studySetService.findByIds(studySetIds);
     }
+
+    @Override
+    public List<StudySetDTO> getMyStudySets() {
+        Optional<UserDetailsImpl> auth = getAuth();
+        if (auth.isEmpty()) {
+            return List.of();
+        }
+
+        return studySetService.findByUserId(auth.get().getId());
+    }
 }

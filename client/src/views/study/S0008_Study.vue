@@ -5,6 +5,7 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME, STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
 import studyService from '@/services/study-service';
+import { useAuthStore } from '@/stores/auth-store';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -12,6 +13,7 @@ const { t } = useI18n();
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Desktop/mobile layout switches at this width (matches the design docs' `lg` breakpoint)
 const DESKTOP_BREAKPOINT_PX = 1024;
@@ -41,6 +43,12 @@ const goToTab = (tab) => {
   router.push({ name: tab.name, params: { setId: route.params.setId } });
 };
 
+/** "New study set" requires a signed-in user; the create-set screen isn't built yet */
+const onNewStudySet = () => {
+  if (authStore.isLoggedIn) return;
+  router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+};
+
 // 4) =============== VUE JS LIFECYCLE ===============
 onMounted(async () => {
   const data = await studyService.getStudySet(route.params.setId);
@@ -59,7 +67,8 @@ onMounted(async () => {
           <span>{{ t('common.app.name') }}</span>
         </div>
 
-        <CBtn unelevated no-caps icon="add" class="study-sidebar__new-set" :label="t('S0008.label.newStudySet')" />
+        <CBtn unelevated no-caps icon="add" class="study-sidebar__new-set" :label="t('S0008.label.newStudySet')"
+          @click="onNewStudySet" />
 
         <q-list class="tw:mt-4">
           <q-item v-for="tab in modeTabs" :key="tab.name" clickable

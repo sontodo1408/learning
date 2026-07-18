@@ -9,6 +9,7 @@ export const ROUTER_NAME = {
   LOGIN: "login",
   USER_HOME: "user-home",
   USER_SEARCH: "user-search",
+  USER_MY_STUDY_SETS: "user-my-study-sets",
   HOME: "home",
   VIDEO_VOCAB: "video-vocab",
   FLASHCARD: "flashcard",
