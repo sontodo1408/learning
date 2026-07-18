@@ -149,4 +149,14 @@ export default {
       noResults: 'Không tìm thấy học phần nào phù hợp',
     },
   },
+  S0011: {
+    btn: {
+      goHome: 'Về trang chủ',
+    },
+    label: {
+      code: '404',
+      title: 'Có vẻ như bạn đã lạc đường',
+      description: 'Trang bạn đang tìm kiếm không tồn tại.',
+    },
+  },
 };

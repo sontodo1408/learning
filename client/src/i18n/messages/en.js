@@ -149,4 +149,14 @@ export default {
       noResults: 'No matching study sets found',
     },
   },
+  S0011: {
+    btn: {
+      goHome: 'Go to Home',
+    },
+    label: {
+      code: '404',
+      title: "Looks like you're lost",
+      description: 'The page you are looking for is not available.',
+    },
+  },
 };

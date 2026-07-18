@@ -84,6 +84,17 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: "/:pathMatch(.*)*",
+      component: () => import("@/layouts/BlankLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: ROUTER_NAME.NOT_FOUND,
+          component: () => import("@/views/S0011_NotFound.vue"),
+        },
+      ],
+    },
   ],
 });
 

@@ -14,6 +14,7 @@ export const ROUTER_NAME = {
   FLASHCARD: "flashcard",
   LEARN: "learn",
   TEST: "test",
+  NOT_FOUND: "not-found",
 };
 
 // Spring Security authority strings (must match the server's ERole enum)
