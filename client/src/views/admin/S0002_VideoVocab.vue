@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="tw:flex tw:px-10 tw:items-center tw:justify-center">
-      <div class="phone-screen" :style="{ backgroundImage: `url(${phoneBackground})` }">
+      <div class="phone-screen" :style="{ backgroundImage: `url(${phoneBackground})` }" @click="startPlayback">
         <div class="play-stage tw:flex tw:items-center tw:justify-center tw:p-4">
           <div class="content-card tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 tw:p-4">
             <template v-if="playStage === 'ringing'">
@@ -485,9 +485,8 @@ onBeforeUnmount(() => {
 
 .phone-screen {
   position: relative;
-  width: 320px;
+  width: 480px;
   aspect-ratio: 9 / 16;
-  max-height: 85vh;
   background-color: #000;
   background-size: cover;
   background-position: center;
