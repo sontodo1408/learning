@@ -149,4 +149,10 @@ export default {
       noResults: 'Không tìm thấy học phần nào phù hợp',
     },
   },
+  S0011: {
+    label: {
+      title: 'Học phần của tôi',
+      empty: 'Bạn chưa có học phần nào',
+    },
+  },
 };

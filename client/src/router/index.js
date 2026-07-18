@@ -69,6 +69,13 @@ const router = createRouter({
               name: ROUTER_NAME.USER_SEARCH,
               component: () => import("@/views/user/S0010_Search.vue"),
             },
+            {
+              path: "my-study-sets",
+              name: ROUTER_NAME.USER_MY_STUDY_SETS,
+              component: () => import("@/views/user/S0011_MyStudySets.vue"),
+              // Only a signed-in user has study sets of their own; enforced in the beforeEach guard below
+              meta: { requiresAuth: true },
+            },
           ],
         },
       ],
@@ -98,6 +105,12 @@ router.beforeEach(async (to) => {
     } catch {
       // rest-client already signs the user out on a 401; nothing else to do here
     }
+  }
+
+  // Screens marked requiresAuth need a signed-in user, regardless of role
+  if (to.matched.some((record) => record.meta.requiresAuth) && !authStore.isLoggedIn) {
+    // Carry the originally requested URL along so the login screen can return here afterwards
+    return { name: ROUTER_NAME.LOGIN, query: { redirect: to.fullPath } };
   }
 
   // /admin screens require a signed-in ROLE_ADMIN user; every other screen stays public

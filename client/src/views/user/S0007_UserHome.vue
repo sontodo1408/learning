@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
+import { useAuthStore } from '@/stores/auth-store';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -11,6 +12,7 @@ const { t } = useI18n();
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Desktop/mobile layout switches at this width (matches the design docs' `lg` breakpoint)
 const DESKTOP_BREAKPOINT_PX = 1024;
@@ -18,19 +20,25 @@ const DESKTOP_BREAKPOINT_PX = 1024;
 /** Whether to render the sidebar (desktop) layout instead of the bottom tab bar (mobile) one */
 const isDesktop = computed(() => $q.screen.width >= DESKTOP_BREAKPOINT_PX);
 
-/** Sidebar/tab-bar nav items; only "home" (Dashboard) has a destination wired up so far */
+/** Sidebar/tab-bar nav items */
 const navItems = computed(() => [
   { key: 'home', icon: 'home', label: t('S0007.label.home'), routerName: ROUTER_NAME.USER_HOME },
-  { key: 'mySets', icon: 'folder', label: t('S0007.label.mySets') },
+  { key: 'mySets', icon: 'folder', label: t('S0007.label.mySets'), routerName: ROUTER_NAME.USER_MY_STUDY_SETS },
 ]);
 
 // 2) =============== VARIABLE REF     ===============
 // 3) =============== METHOD/FUNCTION  ===============
-/** Navigate to a nav item's screen, if it has one wired up yet */
+/** Navigate to a nav item's screen; the router guard redirects to login first if it requires auth */
 const goToNavItem = (item) => {
   if (item.routerName) {
     router.push({ name: item.routerName });
   }
+};
+
+/** "New study set" requires a signed-in user; the create-set screen isn't built yet */
+const onNewStudySet = () => {
+  if (authStore.isLoggedIn) return;
+  router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
@@ -46,7 +54,8 @@ const goToNavItem = (item) => {
           <span>{{ t('common.app.name') }}</span>
         </div>
 
-        <CBtn unelevated no-caps icon="add" class="user-home-sidebar__new-set" :label="t('S0007.label.newStudySet')" />
+        <CBtn unelevated no-caps icon="add" class="user-home-sidebar__new-set" :label="t('S0007.label.newStudySet')"
+          @click="onNewStudySet" />
 
         <q-list class="tw:mt-4">
           <q-item v-for="item in navItems" :key="item.key" clickable

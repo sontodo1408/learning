@@ -149,4 +149,10 @@ export default {
       noResults: 'No matching study sets found',
     },
   },
+  S0011: {
+    label: {
+      title: 'My study sets',
+      empty: "You don't have any study sets yet",
+    },
+  },
 };

@@ -33,6 +33,14 @@ public interface StudySetRepository extends JpaRepository<StudySetEntity, Long> 
     List<StudySetEntity> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     /**
+     * Finds every study set owned by the given user id, most recently created first.
+     *
+     * @param userId the owning user's id (see {@code study_sets.user_id})
+     * @return matching study sets, ordered by creation time descending
+     */
+    List<StudySetEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    /**
      * Counts study sets whose title contains the given substring (case-sensitive).
      *
      * @param title the substring to search for within {@code study_sets.title}

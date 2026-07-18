@@ -124,6 +124,21 @@ public class StudySetServiceImpl implements StudySetService {
                 .toList();
     }
 
+    @Override
+    public List<StudySetDTO> findByUserId(Long userId) {
+        List<StudySetEntity> studySets = studySetRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Long> studySetIds = studySets.stream().map(StudySetEntity::getId).toList();
+
+        Map<Long, List<StudyCardDTO>> cardsByStudySetId = studyCardRepository.findByStudySetIdInOrderByDisplayOrderAsc(studySetIds)
+                .stream()
+                .map(this::toCardDTO)
+                .collect(Collectors.groupingBy(StudyCardDTO::getStudySetId));
+
+        return studySets.stream()
+                .map(studySet -> toSetDTO(studySet, cardsByStudySetId.getOrDefault(studySet.getId(), List.of())))
+                .toList();
+    }
+
     /**
      * {@inheritDoc}
      * If updating an existing study set, its old cards are deleted before the new ones are

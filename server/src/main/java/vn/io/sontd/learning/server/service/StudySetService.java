@@ -61,6 +61,14 @@ public interface StudySetService {
     List<StudySetDTO> findRecentlyCreated(int limit);
 
     /**
+     * Finds every study set owned by the given user id, each with its study cards attached.
+     *
+     * @param userId the owning user's id (see {@code study_sets.user_id})
+     * @return matching study sets, ordered by creation time descending
+     */
+    List<StudySetDTO> findByUserId(Long userId);
+
+    /**
      * Creates or updates a study set together with its cards.
      * If {@code request.getId()} is present, the matching study set is
      * updated and all of its existing cards are deleted and replaced by
