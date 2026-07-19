@@ -277,13 +277,13 @@ const clearPlayTimers = () => {
 /** Run the masked question w/ countdown -> revealed answer sequence for the current card, then advance */
 const playCurrentCard = () => {
   playStage.value = 'question';
-  countdown.value = COUNTDOWN_SECONDS;
   let ticksLeft = COUNTDOWN_SECONDS;
+  countdown.value = ticksLeft;
+  // Sound for the first displayed number fires immediately, not after a 1s delay
+  playTickSound();
 
   countdownIntervalId = setInterval(() => {
-    playTickSound();
     ticksLeft -= 1;
-    countdown.value = ticksLeft;
 
     if (ticksLeft <= 0) {
       clearInterval(countdownIntervalId);
@@ -298,6 +298,9 @@ const playCurrentCard = () => {
           playStage.value = 'idle';
         }
       }, ANSWER_DURATION_MS);
+    } else {
+      countdown.value = ticksLeft;
+      playTickSound();
     }
   }, 1000);
 };
@@ -425,7 +428,9 @@ onBeforeUnmount(() => {
     <div class="tw:flex tw:px-10 tw:items-center tw:justify-center">
       <div class="phone-screen" :style="{ backgroundImage: `url(${phoneBackground})` }" @click="startPlayback">
         <div class="play-stage tw:flex tw:items-center tw:justify-center tw:p-4">
-          <div class="content-card tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 tw:p-4">
+          <div class="content-card tw:relative tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 tw:p-4">
+            <div v-if="playStage === 'question'" :key="countdown" class="countdown-number">{{ countdown }}</div>
+
             <template v-if="playStage === 'ringing'">
               <q-icon name="alarm" size="64px" color="white" class="alarm-icon" />
               <div class="tw:text-white tw:mt-4 tw:text-lg">{{ t('S0002.label.ringing') }}</div>
@@ -451,8 +456,6 @@ onBeforeUnmount(() => {
             </template>
           </div>
         </div>
-
-        <div v-if="playStage === 'question'" :key="countdown" class="countdown-number">{{ countdown }}</div>
       </div>
     </div>
   </q-page>
@@ -538,8 +541,9 @@ onBeforeUnmount(() => {
 
 .countdown-number {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
