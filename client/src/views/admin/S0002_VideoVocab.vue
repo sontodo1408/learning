@@ -29,7 +29,8 @@ const wordTypeOptions = computed(() => Object.values(WORD_TYPE).map((value) => (
 })));
 
 // Durations for the playback sequence: ringing alarm -> masked question w/ countdown -> revealed answer
-const ALARM_DURATION_MS = 3000;
+const ALARM_DURATION_MS = 1500;
+const ALARM_GAP_MS = 500;
 const COUNTDOWN_SECONDS = 5;
 const ANSWER_DURATION_MS = 3000;
 
@@ -314,7 +315,7 @@ const startPlayback = () => {
 
   stageTimeoutId = setTimeout(() => {
     stopAlarmSound();
-    playCurrentCard();
+    stageTimeoutId = setTimeout(() => playCurrentCard(), ALARM_GAP_MS);
   }, ALARM_DURATION_MS);
 };
 
