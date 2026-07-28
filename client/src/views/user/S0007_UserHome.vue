@@ -1,10 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
 import { useAuthStore } from '@/stores/auth-store';
+import dialog from '@/utilities/dialog';
+import D0002_NewStudySet from '../D0002_NewStudySet.vue';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -27,6 +29,9 @@ const navItems = computed(() => [
 ]);
 
 // 2) =============== VARIABLE REF     ===============
+/** Bumped after creating a study set to force the current child screen to remount and refetch its data */
+const pageReloadKey = ref(0);
+
 // 3) =============== METHOD/FUNCTION  ===============
 /** Navigate to a nav item's screen; the router guard redirects to login first if it requires auth */
 const goToNavItem = (item) => {
@@ -35,10 +40,19 @@ const goToNavItem = (item) => {
   }
 };
 
-/** "New study set" requires a signed-in user; the create-set screen isn't built yet */
-const onNewStudySet = () => {
-  if (authStore.isLoggedIn) return;
-  router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+/** "New study set" requires a signed-in user; signed-in users get the create-set dialog */
+const onNewStudySet = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+    return;
+  }
+
+  const studySet = await dialog.showContent(t('D0002.label.dialogTitle'), D0002_NewStudySet, {
+    width: '760px',
+    showHeader: true,
+  });
+  // Creating a study set keeps the user on the current page; just refetch its data
+  if (studySet) { pageReloadKey.value += 1; }
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
@@ -87,7 +101,7 @@ const onNewStudySet = () => {
       </div>
 
       <div class="user-home-page__main">
-        <router-view />
+        <router-view :key="pageReloadKey" />
       </div>
     </div>
 

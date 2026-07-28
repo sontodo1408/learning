@@ -49,22 +49,23 @@ public interface StudySetRepository extends JpaRepository<StudySetEntity, Long> 
     long countByTitleContaining(String title);
 
     /**
-     * Finds every study set whose {@code title}/{@code description} contains the given keyword,
-     * or that owns at least one study card whose {@code term}/{@code definition} contains it
-     * (all case-insensitive).
+     * Finds every public study set whose {@code title}/{@code description} contains the given
+     * keyword, or that owns at least one study card whose {@code term}/{@code definition}
+     * contains it (all case-insensitive). Study sets with {@code isPublic = false} are excluded.
      *
      * @param keyword the substring to search for
-     * @return matching study sets, in no particular order
+     * @return matching public study sets, in no particular order
      */
     @Query("""
             SELECT ss FROM StudySetEntity ss
-            WHERE LOWER(ss.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            WHERE ss.isPublic = true
+              AND (LOWER(ss.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR LOWER(ss.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR ss.id IN (
                    SELECT sc.studySetId FROM StudyCardEntity sc
                    WHERE LOWER(sc.term) LIKE LOWER(CONCAT('%', :keyword, '%'))
                       OR LOWER(sc.definition) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               )
+               ))
             """)
     List<StudySetEntity> searchByKeyword(@Param("keyword") String keyword);
 }

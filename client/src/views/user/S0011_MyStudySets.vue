@@ -3,7 +3,10 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ROUTER_NAME } from '@/helpers/const';
+import dialog from '@/utilities/dialog';
+import studyService from '@/services/study-service';
 import homeService from '@/services/home-service';
+import D0002_NewStudySet from '../D0002_NewStudySet.vue';
 
 // 1) =============== INITIALIZATION   ===============
 const { t } = useI18n();
@@ -14,20 +17,35 @@ const router = useRouter();
 const mySets = ref([]);
 
 // 3) =============== METHOD/FUNCTION  ===============
-/** Open a study set's flashcard mode */
-const goToStudySet = (setId) => {
-  router.push({ name: ROUTER_NAME.FLASHCARD, params: { setId } });
-};
-
-// 4) =============== VUE JS LIFECYCLE ===============
-onMounted(async () => {
+/** Fetch (or refetch) the current user's own study sets */
+const loadMySets = async () => {
   const studySets = await homeService.getMyStudySets();
   mySets.value = studySets.map((studySet) => ({
     id: studySet.id,
     title: studySet.title,
     cardCount: studySet.studyCards?.length ?? 0,
   }));
-});
+};
+
+/** Open a study set's flashcard mode */
+const goToStudySet = (setId) => {
+  router.push({ name: ROUTER_NAME.FLASHCARD, params: { setId } });
+};
+
+/** Load the full study set data and open the edit dialog, refreshing the list on save */
+const onEditStudySet = async (setId) => {
+  const fullStudySet = await studyService.getStudySet(setId);
+  const saved = await dialog.showContent(t('D0002.label.editDialogTitle'), D0002_NewStudySet, {
+    width: '760px',
+    showHeader: true,
+    params: { studySet: fullStudySet },
+  });
+  if (!saved) { return; }
+  await loadMySets();
+};
+
+// 4) =============== VUE JS LIFECYCLE ===============
+onMounted(loadMySets);
 </script>
 
 <template>
@@ -36,6 +54,8 @@ onMounted(async () => {
 
     <div v-if="mySets.length" class="study-set-row">
       <div v-for="set in mySets" :key="set.id" class="study-set-card" @click="goToStudySet(set.id)">
+        <CBtn round dense flat icon="edit" color="grey-7" class="study-set-card__edit-btn"
+          @click.stop="onEditStudySet(set.id)" />
         <q-icon name="menu_book" size="26px" color="lime-1" />
         <div class="study-set-card__title">{{ set.title }}</div>
         <div class="study-set-card__count">
@@ -71,6 +91,7 @@ onMounted(async () => {
 }
 
 .study-set-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -83,6 +104,14 @@ onMounted(async () => {
 
   &:hover {
     transform: translateY(-2px);
+  }
+
+  // Quasar's own q-btn CSS sets position:relative outside of Tailwind's layer, taking
+  // precedence over a tw:absolute utility class — set the position directly here instead.
+  &__edit-btn {
+    position: absolute !important;
+    top: 8px;
+    right: 8px;
   }
 
   &__title {

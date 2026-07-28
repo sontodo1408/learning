@@ -165,4 +165,23 @@ export default {
       description: 'Trang bạn đang tìm kiếm không tồn tại.',
     },
   },
+  D0002: {
+    btn: {
+      addCard: 'Thêm thẻ',
+      save: 'Lưu',
+    },
+    label: {
+      dialogTitle: 'Học phần mới',
+      editDialogTitle: 'Sửa học phần',
+      titlePlaceholder: 'Tên học phần',
+      descriptionPlaceholder: 'Mô tả',
+      isPublic: 'Công khai học phần này',
+      cardsSection: 'Thẻ ghi nhớ',
+      termPlaceholder: 'Từ vựng',
+      definitionPlaceholder: 'Định nghĩa',
+      pronounceDefPlaceholder: 'Phiên âm',
+      wordTypePlaceholder: 'Loại từ',
+      saveSuccess: 'Đã lưu học phần thành công!',
+    },
+  },
 };

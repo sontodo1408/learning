@@ -165,4 +165,23 @@ export default {
       description: 'The page you are looking for is not available.',
     },
   },
+  D0002: {
+    btn: {
+      addCard: 'Add card',
+      save: 'Save',
+    },
+    label: {
+      dialogTitle: 'New study set',
+      editDialogTitle: 'Edit study set',
+      titlePlaceholder: 'Study set title',
+      descriptionPlaceholder: 'Description',
+      isPublic: 'Make this study set public',
+      cardsSection: 'Cards',
+      termPlaceholder: 'Term',
+      definitionPlaceholder: 'Definition',
+      pronounceDefPlaceholder: 'Pronunciation',
+      wordTypePlaceholder: 'Word type',
+      saveSuccess: 'Study set saved successfully!',
+    },
+  },
 };

@@ -2,6 +2,7 @@ package vn.io.sontd.learning.server.service;
 
 import org.springframework.web.multipart.MultipartFile;
 import vn.io.sontd.learning.server.dto.studyset.StudySetDTO;
+import vn.io.sontd.learning.server.request.studyset.MyStudySetUpsertRequest;
 import vn.io.sontd.learning.server.request.studyset.StudySetUpsertRequest;
 
 import java.util.List;
@@ -21,12 +22,12 @@ public interface StudySetService {
     List<StudySetDTO> findByTitleContaining(String title);
 
     /**
-     * Searches study sets whose title/description contains the given keyword, or that own at
-     * least one study card whose term/definition contains it (all case-insensitive), each with
-     * its study cards attached.
+     * Searches public study sets whose title/description contains the given keyword, or that
+     * own at least one study card whose term/definition contains it (all case-insensitive),
+     * each with its study cards attached. Study sets with {@code isPublic = false} are excluded.
      *
      * @param keyword the substring to search for
-     * @return matching study sets, as frontend-facing DTOs
+     * @return matching public study sets, as frontend-facing DTOs
      */
     List<StudySetDTO> search(String keyword);
 
@@ -85,4 +86,26 @@ public interface StudySetService {
      * @return the saved study set, as a frontend-facing DTO
      */
     StudySetDTO saveStudySet(StudySetUpsertRequest request, List<MultipartFile> files);
+
+    /**
+     * Creates or updates a study set (together with its cards) owned by the current
+     * authenticated user, unlike {@link #saveStudySet}, which always saves under the
+     * "video vocab" system account with an auto-generated title/description.
+     * {@code title}, {@code description} and {@code isPublic} are taken as-is from
+     * {@code request}; {@code userId} is always the current user's id.
+     * <p>
+     * If {@code request.getId()} is present, the matching study set is updated (its existing
+     * cards deleted and replaced by {@code request.getStudyCards()}) — but only if it's
+     * currently owned by the current user. If {@code request.getId()} is {@code null}, a new
+     * study set owned by the current user is created.
+     * <p>
+     * Cards may reference newly uploaded images the same way as {@link #saveStudySet} does.
+     *
+     * @param request the study set (and cards) to save
+     * @param files   the uploaded image files referenced by the cards, or {@code null}/empty if none
+     * @return the saved study set, as a frontend-facing DTO
+     * @throws vn.io.sontd.learning.server.exception.BusinessException if the caller isn't logged in,
+     *                                                                 {@code request.getId()} doesn't resolve to a study set, or it's not owned by the current user
+     */
+    StudySetDTO saveMyStudySet(MyStudySetUpsertRequest request, List<MultipartFile> files);
 }

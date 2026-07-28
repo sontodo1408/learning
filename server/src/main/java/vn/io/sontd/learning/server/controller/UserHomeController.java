@@ -1,14 +1,22 @@
 package vn.io.sontd.learning.server.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import vn.io.sontd.learning.server.request.studyset.MyStudySetUpsertRequest;
 import vn.io.sontd.learning.server.response.ResponseData;
 import vn.io.sontd.learning.server.response.ResponseRoot;
 import vn.io.sontd.learning.server.service.StudySetService;
 import vn.io.sontd.learning.server.service.UserHomeService;
+import vn.io.sontd.learning.server.utils.CommonUtils;
+
+import java.util.List;
 
 /**
  * User home screen endpoints.
@@ -41,6 +49,29 @@ public class UserHomeController extends BaseController {
     @GetMapping("/my-study-sets")
     public ResponseRoot getMyStudySets() {
         return success(new ResponseData<>(userHomeService.getMyStudySets()));
+    }
+
+    /**
+     * Creates or updates a study set owned by the current authenticated user, together with
+     * its cards, accepting the card images in the same request. Sent as
+     * {@code multipart/form-data} with:
+     * <ul>
+     *   <li>{@code data} — the JSON {@link MyStudySetUpsertRequest};</li>
+     *   <li>{@code files} — zero or more image files, referenced from each card by its
+     *       {@code imageFileIndex} (0-based position in this list).</li>
+     * </ul>
+     * If {@code data.id} is present the matching study set is updated (only when it's owned by
+     * the current user) and its existing cards are replaced by {@code data.studyCards}; if
+     * {@code null}, a new study set owned by the current user is created.
+     *
+     * @param data  the JSON study set payload (a multipart part, so it's read as a raw string and parsed here)
+     * @param files the uploaded card images, or {@code null} when no card has a new image
+     */
+    @PostMapping(value = "/my-study-sets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseRoot saveMyStudySet(@RequestPart("data") String data,
+                                       @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        MyStudySetUpsertRequest request = CommonUtils.parseJson(data, MyStudySetUpsertRequest.class);
+        return success(new ResponseData<>(studySetService.saveMyStudySet(request, files)));
     }
 
     /**

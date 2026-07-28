@@ -1,11 +1,13 @@
 <script setup>
-import { reactive, computed, provide, onMounted } from 'vue';
+import { ref, reactive, computed, provide, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { ROUTER_NAME, STUDY_HEADER_KEY, STUDY_SET_KEY } from '@/helpers/const';
 import studyService from '@/services/study-service';
 import { useAuthStore } from '@/stores/auth-store';
+import dialog from '@/utilities/dialog';
+import D0002_NewStudySet from '../D0002_NewStudySet.vue';
 import logoO from '@/assets/imgs/logo_o.png';
 
 // 1) =============== INITIALIZATION   ===============
@@ -37,16 +39,28 @@ provide(STUDY_HEADER_KEY, studyHeader);
 const studySet = reactive({ id: null, title: '', description: '', studyCards: [] });
 provide(STUDY_SET_KEY, studySet);
 
+/** Bumped after creating a study set to force the current mode screen to remount and refetch its data */
+const pageReloadKey = ref(0);
+
 // 3) =============== METHOD/FUNCTION  ===============
 /** Switch study mode, keeping the current study set in the route */
 const goToTab = (tab) => {
   router.push({ name: tab.name, params: { setId: route.params.setId } });
 };
 
-/** "New study set" requires a signed-in user; the create-set screen isn't built yet */
-const onNewStudySet = () => {
-  if (authStore.isLoggedIn) return;
-  router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+/** "New study set" requires a signed-in user; signed-in users get the create-set dialog */
+const onNewStudySet = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push({ name: ROUTER_NAME.LOGIN, query: { redirect: route.fullPath } });
+    return;
+  }
+
+  const createdStudySet = await dialog.showContent(t('D0002.label.dialogTitle'), D0002_NewStudySet, {
+    width: '760px',
+    showHeader: true,
+  });
+  // Creating a study set keeps the user on the current page; just refetch its data
+  if (createdStudySet) { pageReloadKey.value += 1; }
 };
 
 // 4) =============== VUE JS LIFECYCLE ===============
@@ -116,7 +130,7 @@ onMounted(async () => {
         </div>
 
         <div class="study-page__page tw:pb-4">
-          <router-view />
+          <router-view :key="pageReloadKey" />
         </div>
       </div>
     </div>

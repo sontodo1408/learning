@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import vn.io.sontd.learning.server.config.security.UserDetailsImpl;
 import vn.io.sontd.learning.server.constant.Constant;
 import vn.io.sontd.learning.server.constant.Message;
 import vn.io.sontd.learning.server.dto.studyset.StudyCardDTO;
@@ -14,8 +15,10 @@ import vn.io.sontd.learning.server.entity.StudySetEntity;
 import vn.io.sontd.learning.server.exception.BusinessException;
 import vn.io.sontd.learning.server.repository.StudyCardRepository;
 import vn.io.sontd.learning.server.repository.StudySetRepository;
+import vn.io.sontd.learning.server.request.studyset.MyStudySetUpsertRequest;
 import vn.io.sontd.learning.server.request.studyset.StudyCardUpsertRequest;
 import vn.io.sontd.learning.server.request.studyset.StudySetUpsertRequest;
+import vn.io.sontd.learning.server.service.BaseService;
 import vn.io.sontd.learning.server.service.ImageStorageService;
 import vn.io.sontd.learning.server.service.StudySetService;
 import vn.io.sontd.learning.server.utils.CommonUtils;
@@ -33,7 +36,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
-public class StudySetServiceImpl implements StudySetService {
+public class StudySetServiceImpl extends BaseService implements StudySetService {
     private final StudySetRepository studySetRepository;
     private final StudyCardRepository studyCardRepository;
     private final ImageStorageService imageStorageService;
@@ -161,7 +164,7 @@ public class StudySetServiceImpl implements StudySetService {
     @Transactional
     public StudySetDTO saveStudySet(StudySetUpsertRequest request, List<MultipartFile> files) {
         // Store any newly uploaded images first and point each card's imgUrl at them.
-        resolveCardImages(request, files);
+        resolveCardImages(request.getStudyCards(), files);
 
         StudySetEntity studySet;
         boolean isNew = request.getId() == null;
@@ -200,17 +203,62 @@ public class StudySetServiceImpl implements StudySetService {
     }
 
     /**
+     * {@inheritDoc}
+     * Unlike {@link #saveStudySet}, an update only proceeds if the study set is currently
+     * owned by the current user; {@code title}/{@code description}/{@code isPublic} are taken
+     * as-is from {@code request} rather than auto-generated.
+     */
+    @Override
+    @Transactional
+    public StudySetDTO saveMyStudySet(MyStudySetUpsertRequest request, List<MultipartFile> files) {
+        Long userId = getAuth().map(UserDetailsImpl::getId)
+                .orElseThrow(() -> new BusinessException(Message.LOGIN_REQUIRED));
+
+        // Store any newly uploaded images first and point each card's imgUrl at them.
+        resolveCardImages(request.getStudyCards(), files);
+
+        StudySetEntity studySet;
+        boolean isNew = request.getId() == null;
+        if (isNew) {
+            studySet = new StudySetEntity();
+        } else {
+            studySet = studySetRepository.findById(request.getId())
+                    .orElseThrow(() -> new BusinessException(Message.STUDY_SET_NOT_FOUND));
+            if (!Objects.equals(studySet.getUserId(), userId)) {
+                throw new BusinessException(Message.STUDY_SET_ACCESS_DENIED);
+            }
+            studyCardRepository.deleteByStudySetId(studySet.getId());
+        }
+        studySet.setUserId(userId);
+        studySet.setTitle(request.getTitle());
+        studySet.setDescription(request.getDescription());
+        studySet.setIsPublic(request.getIsPublic());
+        studySet = studySetRepository.save(studySet);
+        Long studySetId = studySet.getId();
+
+        List<StudyCardEntity> newCards = request.getStudyCards() == null ? List.of()
+                : request.getStudyCards().stream().map(cardRequest -> toNewCardEntity(studySetId, cardRequest)).toList();
+
+        List<StudyCardDTO> savedCards = studyCardRepository.saveAll(newCards).stream()
+                .sorted(Comparator.comparing(StudyCardEntity::getDisplayOrder))
+                .map(this::toCardDTO)
+                .toList();
+
+        return toSetDTO(studySet, savedCards);
+    }
+
+    /**
      * For every card that references a newly uploaded file (via
      * {@link StudyCardUpsertRequest#getImageFileIndex()}), stores the file and rewrites
      * the card's {@code imgUrl} to the stored image's public URL. Cards without an index
      * keep their {@code imgUrl} untouched (an existing URL on update, or empty).
      * Runs inside the save transaction, so a later DB failure may leave an orphan file on disk.
      */
-    private void resolveCardImages(StudySetUpsertRequest request, List<MultipartFile> files) {
-        if (request.getStudyCards() == null) {
+    private void resolveCardImages(List<StudyCardUpsertRequest> cards, List<MultipartFile> files) {
+        if (cards == null) {
             return;
         }
-        for (StudyCardUpsertRequest card : request.getStudyCards()) {
+        for (StudyCardUpsertRequest card : cards) {
             Integer fileIndex = card.getImageFileIndex();
             if (fileIndex == null) {
                 continue;

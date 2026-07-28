@@ -27,4 +27,8 @@ public class Message {
     public static final String IMAGE_FILE_INDEX_INVALID = "Chỉ số file ảnh không hợp lệ!";
     /** Message returned when an uploaded image can't be stored (empty file or I/O error). */
     public static final String IMAGE_UPLOAD_FAIL = "Lưu ảnh thất bại. Vui lòng thử lại!";
+    /** Message returned when saving a study set that requires a logged-in user, but the caller is anonymous. */
+    public static final String LOGIN_REQUIRED = "Vui lòng đăng nhập để thực hiện thao tác này!";
+    /** Message returned when updating a study set owned by a different user. */
+    public static final String STUDY_SET_ACCESS_DENIED = "Bạn không có quyền chỉnh sửa study set này!";
 }
